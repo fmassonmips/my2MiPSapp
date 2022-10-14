@@ -1,0 +1,135 @@
+<div class="page" data-name="form">
+  <div class="navbar">
+    <div class="navbar-bg"></div>
+    <div class="navbar-inner sliding">
+      <div class="left">
+        <a href="#" class="link back">
+          <i class="icon icon-back"></i>
+          <span class="if-not-md">Back</span>
+        </a>
+      </div>
+      <div class="title">Remote Payment Form</div>
+    </div>
+  </div>
+  <div class="page-content">
+    <div class="block-title">ADD A NEW PAYMENT TICKET - STEP 1 OF 2</div>
+    <div class="list no-hairlines-md">
+      <ul>
+        <li>
+          <label class="item-radio item-content">
+            <input type="radio" name="radio" value="MUR" checked="checked"/>
+            <i class="icon icon-radio"></i>
+            <div class="item-inner">
+              <div class="item-title">MUR</div>
+            </div>
+          </label>
+        </li>
+        <li>
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">Amount to pay</div>
+              <div class="item-input-wrap">
+                <input type="text" placeholder="0.00" id="amount_to_pay_r" name="amount_to_pay_r" required validate data-error-message="Enter a valid amount" onfocus="app.keypad.create({
+                inputEl: '#amount_to_pay_r',
+    openIn: 'popover',
+    toolbarCloseText: 'CONFIRM',
+    value: '',
+  });"/>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">First name *</div>
+              <div class="item-input-wrap">
+                <input type="text" placeholder="Firstname" name="qp_first_name" id="qp_first_name"/>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">Last name *</div>
+              <div class="item-input-wrap">
+                <input type="text" placeholder="Last name" name="qp_last_name" id="qp_last_name"/>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">E-mail</div>
+              <div class="item-input-wrap">
+                <input type="email" placeholder="E-mail" name="ticket_email" id="ticket_email"/>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">Phone</div>
+              <div class="item-input-wrap">
+                <input type="tel" placeholder="Phone" id="ticket_phone"/>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">Order Title</div>
+              <div class="item-input-wrap">
+                <input type="text" placeholder="Short Description" id="ticket_short_desc" name="qp_order_title"/>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li class="align-top">
+          <div class="item-content item-input">
+            <div class="item-inner">
+              <div class="item-title item-label">Remarks</div>
+              <div class="item-input-wrap">
+                <textarea placeholder="Remarks" class="resizable"></textarea>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="block block-strong">
+
+      <p class="row">
+        <a href="#" class="link back col button button-large button-fill button-raised color-green" id="create_payment_ticket_btn" onclick="createPaymentTicket();">SEND PAYMENT LINK</a>
+      </p>
+      <!-- javascript:createPaymentTicket();-->
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+  export default function (props, {$f7, $on, $onBeforeMount, $onMounted, $onBeforeUnmount, $onUnmounted }) {
+    var $$ = Dom7;
+
+    $$(document).on('page:init', function (e) {
+      // Page Data contains all required information about loaded and initialized page
+      var page = e.detail;
+      console.log(e);
+    })
+    
+  var AmountKeypadRemote = app.keypad.create({
+    inputEl: '#amount_to_pay_r',
+    openIn: 'popover',
+    toolbarCloseText: 'CONFIRM',
+    value: '1.50',
+  });
+
+  }
+
+</script>

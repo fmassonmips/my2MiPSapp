@@ -1,0 +1,3447 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <!--
+  Customize this policy to fit your own app's needs. For more guidance, please refer to the docs:
+      https://cordova.apache.org/docs/en/latest/
+  Some notes:
+    * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+    * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+      * Enable inline JS: add 'unsafe-inline' to default-src
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: content:">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#fff">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="msapplication-tap-highlight" content="no">
+  <title>MiPS</title>
+  <link rel="stylesheet" href="framework7/framework7-bundle.min.css">
+  <link rel="stylesheet" href="framework7/framework7-keypad.min.css">
+  <link rel="stylesheet" href="css/icons.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/till.css">
+  <link rel="stylesheet" href="css/transactions.css">
+  <script type="text/javascript" src="js/TLV_Parse.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+  <style>
+    /*Custom css to merge*/
+    .version{
+      position: absolute;
+      bottom: 17px;
+      left: 100px;
+    }
+    .hide {
+      display: none;
+    }
+    .accordion-item-content {
+      position: relative;
+      overflow: hidden;
+      height: 0;
+      font-size: 14px;
+      -webkit-transition-duration: 0.3s;
+      transition-duration: 0.3s;
+      -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
+    }
+    .accordion-item-expanded > .accordion-item-content {
+      height: auto;
+    }
+    html.android-4 .accordion-item-content {
+      -webkit-transform: none;
+      transform: none;
+    }
+  </style>
+</head>
+<body class="">
+<div id="app">
+  <!-- Right panel with reveal effect-->
+  <div class="panel panel-right panel-reveal theme-dark">
+    <div class="view">
+      <div class="page">
+        <div class="navbar">
+          <div class="navbar-bg"></div>
+          <div class="navbar-inner">
+            <div class="title">MENU</div>
+          </div>
+        </div>
+        <div class="page-content">
+          <div class="">
+            <div class="list">
+              <ul>
+                <li>
+                  <a href="#" class="item-content item-link not-activated" id="fidelity-link">
+                    <div class="item-inner">
+                      <div class="item-title">Connect Fidelity Card</div>
+                    </div>
+                  </a>
+                </li>
+                <li class="accordion-item rp-menu">
+                  <a class="item-link item-content">
+                    <div class="item-inner">
+                      <div class="item-title">Remote Payments</div>
+                    </div>
+                  </a>
+                  <div class="accordion-item-content">
+                    <div class="list links-list accordion-list">
+                      <ul>
+                <li>
+                          <a href="/form/" class="item-content item-link" onclick="app.panel.close();" id="remote_payment_btn">
+                    <div class="item-inner">
+                              <div class="item-title">Create Ticket</div>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                          <a href="/payments-reports/" class="item-content item-link" id="mips-payment-link">
+                    <div class="item-inner">
+                              <div class="item-title">Payments Reports</div>
+                    </div>
+                  </a>
+                </li>
+                      </ul>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <a href="/transactions/" class="item-content item-link mips-menu-link">
+                    <div class="item-inner">
+                      <div class="item-title">Transactions</div>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a href="/till/" class="item-content item-link" onclick="app.panel.close();" id="mips-till-link">
+                    <div class="item-inner">
+                      <div class="item-title">My Mini Till</div>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a href="/settings/" class="item-content item-link mips-settings-menu-link" onclick="app.panel.close();">
+                    <div class="item-inner">
+                      <div class="item-title">Settings</div>
+                    </div>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" class="item-content item-link" id="logout-link">
+                    <div class="item-inner">
+                      <div class="item-title">Log out</div>
+                    </div>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="version"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Your main view, should have "view-main" class -->
+  <div class="view view-main view-init safe-areas">
+    <div class="page" data-name="home">
+      <!-- Top Navbar -->
+      <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner">
+          <div class="left">
+            <img src="assets/favicon-mips.png" alt="Logo MiPS" class="nav-mips-logo">
+          </div>
+          <div class="title"></div>
+          <div class="right">
+            <div class="nav-mips-user">
+              <div id="nav-mips-merchant-name"></div>
+              <div id="nav-mips-user-name"></div>
+            </div>
+            <a href="#" class="link icon-only panel-open nav-mips-icon-user" data-panel="right">
+              <i class="icon f7-icons if-not-md">menu</i>
+              <i class="icon material-icons if-md">menu</i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Scrollable page content-->
+      <div class="page-content">
+        <div class="block no-hairlines no-margin-top margin-bottom-half block-input-amount">
+          <form id="payment_form" name="payment_form" action="">
+            <input type="hidden" id="payment_amount" name="payment_amount">
+            <input type="hidden" id="amount_trigger_otp" name="amount_trigger_otp">
+            <input type="hidden" id="m" name="m">
+            <input type="hidden" id="mn" name="mn">
+            <input type="hidden" id="s" name="s">
+            <input type="hidden" id="c" name="c">
+            <input type="hidden" id="f" name="f">
+            <input type="hidden" id="qp_form" name="qp_form">
+            <input type="hidden" id="qp_lform" name="qp_lform" value="">
+            <input type="hidden" id="o" name="o" value="">
+            <input type="hidden" id="creator_id" name="creator_id">
+            <input type="hidden" id="creator_email" name="creator_email">
+            <input type="hidden" id="op_id" name="op_id" value="">
+            <input type="hidden" id="r_pwd" name="r_pwd">
+            <input type="hidden" id="till_id" name="till_id" value="">
+            <input type="hidden" id="device_id" name="device_id" value="">
+            <input type="hidden" id="connected_user_name" name="connected_user_name" value="">
+            <input type="hidden" id="is_till_integration" name="is_till_integration" value="1">
+            <input type="hidden" id="is_minit_ill_on" name="is_minit_ill_on" value="0">
+            <input type="hidden" id="is_printer_on" name="is_printer_on" value="1">
+            <input type="hidden" id="default_printer_mac" name="default_printer_mac" value="0">
+            <input type="hidden" id="is_fidelity_on" name="is_fidelity_on" value="0">
+            <div class="popover popover-payment-types">
+              <div class="popover-inner">
+                <div class="list">
+                  <ul>
+                    <li><a class="list-button item-link" href="#">One Off</a></li>
+                    <li><a class="list-button item-link" href="#" id="_deposit-balance">Deposit/Balance</a></li>
+                    <li><a class="list-button item-link" href="#" id="_membership">Membership</a></li>
+                    <li><a class="list-button item-link" href="#" id="_warranty">Warranty</a></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row justify-content-center amount_section">
+              <div class="col-100 xsmall-75 small-60 medium-40">
+                <div class="list no-hairlines-md no-margin-bottom margin-top-half">
+                  <ul>
+                    <li class="item-content item-input amount-input">
+                      <div class="item-inner no-padding-bottom">
+                        <div class="item-input-wrap">
+                          <input id="amount_to_pay" type="text" name="amount_to_pay" placeholder="0.00" required validate data-error-message="Enter a valid amount" />
+                        </div>
+                      </div>
+                      <div class="item-media">
+                        <div>
+                          <a class="link smart-select link-select-currency">
+                            <select name="smart-select-currency" id="smart-select-currency">
+                            </select>
+                            <div class="badge"><div class="item-after"></div></div>
+                          </a>
+                        </div>
+                        <div>
+                          <a class="link popover-open not-activated" href="#" data-popover=".popover-payment-types"><div class="badge"><img src="assets/one-off-payment.png"></div></a>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="item-content item-input item-input-outline no-padding-left remarks-list">
+                      <div class="item-inner no-padding-right no-padding-bottom">
+                        <div class="item-title item-floating-label">Remarks</div>
+                        <div class="item-input-wrap">
+                          <input type="text" placeholder="Optional" id="remarks">
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-visuals">
+          <div class="row justify-content-center">
+            <div class="col-100 xsmall-75 small-60 medium-40">
+              <div class="card-help-block">
+                <div class="progressbar-infinite color-multi"></div>
+                <img id="img-enter-card" src="assets/enter-card.png" alt="Enter Card">
+                <img id="img-tap-phone" src="assets/tchin-phone.png" alt="Tchin Phone">
+                <img id="img-success-msg" src="assets/text-success.png" alt="Success">
+                <img id="img-tchin-fidelity" src="assets/tchin-card.png" alt="Tchin Card">
+                <img id="img-tchin-mcard" src="assets/tchin-mcard.png" alt="Tchin Mcard">
+                <div class="progressbar-infinite color-multi"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-qr-pay not-activated">
+          <div class="row justify-content-center">
+            <div class="col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="show-qr-btn">
+                <span class="preloader"></span><span><i class="f7-icons">qrcode</i> QR Pay</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-sof-card not-activated">
+          <div class="row justify-content-center">
+            <div class="col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="confirm_amount">
+                    <span class="preloader">
+                      <span class="preloader-inner">
+                        <svg viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16"></circle>
+                        </svg>
+                      </span>
+                    </span>
+                <span><i class="f7-icons">creditcard</i> CARD</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-sof-azap not-activated">
+          <div class="row justify-content-center">
+            <div class="col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="azap-nfc-btn">
+                    <span class="preloader">
+                      <span class="preloader-inner">
+                        <svg viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16"></circle>
+                        </svg>
+                      </span>
+                    </span>
+                <span><i class="f7-icons">dot_radiowaves_left_right</i> CONTACTLESS</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block_scan_fidelity_card">
+          <div class="row justify-content-center">
+            <div class="col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-fill button-raised button-preloader margin-bottom-half" id="scan_fidelity_card">
+                <span class="preloader"></span>
+                <span><i class="f7-icons">qrcode_viewfinder</i> Scan</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom idp-block not-activated">
+          <div class="row">
+            <div class="col col-100 xsmall-75 small-60 medium-40 idp-tchin-option-only not-activated" id="idp-tchin-option-only">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="tchin-pop">
+                <span class="preloader"></span><span><img class="idp-type-logo" src="assets/tchin-mips.png" alt="TCHIN"></span>
+                <span class="span-sof-logo"><img class="idp-sof-logo" src="assets/logo-pop2.png" alt="POP"></span>
+              </button>
+            </div>
+            <div class="col col-100 xsmall-75 small-60 medium-40 idp-phone-option-only not-activated" id="idp-phone-option-only">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="phone-pop">
+                <span class="preloader"></span><span><i class="f7-icons">circle_grid_3x3</i> Push 2<br>Phone</span>
+              </button>
+            </div>
+          </div>
+          <div class="row tchin-fallback-scan-qr">
+            <div class="col col-100 xsmall-75 small-60 medium-40">
+              <div class="text-align-center no-margin-top margin-bottom-half" id="text-info-tchin">Please ensure NFC is active</div>
+              <button class="button button-large button-fill button-raised button-preloader margin-bottom-half not-activated" id="scan-qr-btn">
+                <span class="preloader"></span><span><i class="f7-icons">qrcode</i> SCAN QR CODE</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-smart-payment not-activated">
+          <div class="row">
+            <div class="col col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="smart-payment-btn">
+                <span class="preloader"></span><span>SMART CARD</span>
+                <span class="span-sof-logo"><img class="idp-sof-logo" src="assets/tchin-mips.png" alt="Tchin"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-phone-payment">
+          <div class="idp-phone-block">
+            <div class="row justify-content-center">
+              <div class="col-100 xsmall-75 small-60">
+                <div class="list no-hairlines-md margin-bottom-half no-margin-top">
+                  <ul>
+                    <li class="item-content item-input idp-phone-input">
+                      <div class="item-media">
+                        <i class="f7-icons">circle_grid_3x3</i>
+                      </div>
+                      <div class="item-inner">
+                        <div class="item-input-wrap">
+                          <input id="idp-phone-num" type="text" name="idp-phone-num" placeholder="Enter phone number" required />
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row justify-content-center">
+              <div class="col col-100 xsmall-75 small-60 medium-40">
+                <button class="button button-large button-fill button-raised button-preloader margin-bottom-half not-activated" id="confirm-phone-idp">
+                    <span class="preloader">
+                      <span class="preloader-inner">
+                        <svg viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16"></circle>
+                        </svg>
+                      </span>
+                    </span>
+                  <span>SEND TO POP</span>
+                </button>
+              </div>
+            </div>
+            <div class="row justify-content-center">
+              <div class="col col-100 xsmall-75 small-60 medium-40">
+                <button class="button button-large button-fill button-raised button-preloader margin-bottom-half not-activated" id="confirm-phone-azap">
+                    <span class="preloader">
+                      <span class="preloader-inner">
+                        <svg viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16"></circle>
+                        </svg>
+                      </span>
+                    </span>
+                  <span>SMART PAYMENT</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top margin-bottom-half not-activated" >
+          <div class="row">
+            <div class="col col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-fill button-raised button-preloader color-resetbtn" id="update-fw-btn">
+                <span class="preloader"></span><span>Update Ipek</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom">
+          <div class="row">
+            <div class="col col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-fill button-raised button-preloader color-resetbtn margin-bottom-half" id="reset-btn">
+                <span class="preloader"></span><span><i class="f7-icons">arrow_clockwise</i> RESET</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <textarea id="posResult" style="overflow:scroll; overflow-x:hidden; height:350px;width:100%; margin-top: 10px; display:none;" readonly></textarea>
+        </div>
+        <div id="keyBoard" style="position:fixed; bottom:0px; width:100%;left: 0px; z-index: 99;"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Login Screen -->
+  <div class="login-screen modal-in" id="my-login-screen">
+    <div class="view">
+      <div class="page">
+        <div class="page-content login-screen-content">
+          <div class="block login-block">
+            <div class="row justify-content-center">
+              <div class="col-100 xsmall-75 small-60">
+                <div class="list no-hairlines-md no-margin">
+                  <ul>
+                    <li class="item-content item-input">
+                      <div class="item-media">
+                        <i class="f7-icons">person_circle</i>
+                      </div>
+                      <div class="item-inner">
+                        <div class="item-input-wrap input-dropdown-wrap">
+                          <select id="select-user" placeholder="Please select user">
+                            <option value="" >Please select user</option>
+                          </select>
+                        </div>
+                      </div>
+                    </li>
+                    <li class="item-content item-input">
+                      <div class="item-media">
+                        <i class="f7-icons">lock_circle</i>
+                      </div>
+                      <div class="item-inner">
+                        <div class="item-input-wrap">
+                          <input id="user-pin" type="password" placeholder="Enter your PIN" maxlength="4" autocomplete="off" onchange="checklogin();"/>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="row justify-content-center">
+              <div class="col col-100 xsmall-75 small-60 medium-40">
+                <button class="button button-large button-fill button-raised button-preloader not-activated" id="login-btn">
+                    <span class="preloader">
+                      <span class="preloader-inner">
+                        <svg viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16"></circle>
+                        </svg>
+                      </span>
+                    </span>
+                  <span>Sign in</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--SOF Options Sheet-->
+  <div class="sheet-modal user-sof-sheet" data-close-by-backdrop-click="false" style="height:auto;">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="left"></div>
+        <div class="right"><a class="button button-small button-fill color-resetbtn user-sof-sheet-close" href="#">Cancel</a></div>
+      </div>
+    </div>
+    <div class="sheet-modal-inner">
+      <div class="page-content">
+        <div class="block margin-top-half margin-bottom-half">
+          <div class="block-header">Payment Options:</div>
+          <div class="user-sof-block">
+            <div class="list no-margin-top margin-bottom-half">
+              <ul>
+                <li>
+                  <label class="item-radio item-radio-icon-start item-content">
+                    <input type="radio" class="user-sof-radio" name="user-sof-radio" data-sof-type="Mastercard" data-sof-end="0839" value="" checked />
+                    <i class="icon icon-radio"></i>
+                    <div class="item-inner">
+                      <div class="item-title">Debit *** 0839</div>
+                      <div class="item-media"><img src="assets/logo-mastercard.png"></div>
+                    </div>
+                  </label>
+                </li>
+                <li>
+                  <label class="item-radio item-radio-icon-start item-content">
+                    <input type="radio" class="user-sof-radio" name="user-sof-radio" data-sof-type="Visa" data-sof-end="6578" value="" />
+                    <i class="icon icon-radio"></i>
+                    <div class="item-inner">
+                      <div class="item-title">Credit *** 6578</div>
+                      <div class="item-media"><img src="assets/logo-visa.png"></div>
+                    </div>
+                  </label>
+                </li>
+                <li>
+                  <label class="item-radio item-radio-icon-start item-content">
+                    <input type="radio" class="user-sof-radio" name="user-sof-radio" data-sof-type="Savings" data-sof-end="119" value="" />
+                    <i class="icon icon-radio"></i>
+                    <div class="item-inner">
+                      <div class="item-title">Savings *** 119 via Pop</div>
+                      <div class="item-media"><img src="assets/logo-mcb.png"></div>
+                    </div>
+                  </label>
+                </li>
+                <li>
+                  <label class="item-radio item-radio-icon-start item-content">
+                    <input type="radio" class="user-sof-radio" name="user-sof-radio" data-sof-type="Savings" data-sof-end="1458" value="" />
+                    <i class="icon icon-radio"></i>
+                    <div class="item-inner">
+                      <div class="item-title">Savings *** 458 via Pop</div>
+                      <div class="item-media"><img src="assets/logo-bankone.png"></div>
+                    </div>
+                  </label>
+                </li>
+              </ul>
+            </div>
+            <div class="row justify-content-center">
+              <div class="col col-100 xsmall-75 small-60 medium-40">
+                <button class="button button-fill button-raised button-preloader" id="user-sof-confirm-btn">
+                      <span class="preloader">
+                        <span class="preloader-inner">
+                          <svg viewBox="0 0 36 36">
+                            <circle cx="18" cy="18" r="16"></circle>
+                          </svg>
+                        </span>
+                      </span>
+                  <span>Confirm</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--Smart Payment Options Sheet-->
+  <div class="sheet-modal smart-card-sheet" data-close-by-backdrop-click="true" style="height:auto;">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="left"></div>
+        <div class="right"><a class="button button-small button-fill color-resetbtn sheet-close" href="#">Cancel</a></div>
+      </div>
+    </div>
+    <div class="sheet-modal-inner">
+      <div class="page-content">
+        <div class="block margin-top-half margin-bottom-half">
+          <div class="block-header">TCHIN Smart Payment Options:</div>
+          <div class="user-sof-block">
+            <div class="list no-margin-top margin-bottom-half">
+              <ul>
+                <li>
+                  <div class="col-100 xsmall-75 small-60 medium-40 margin-bottom-half">
+                    <button class="button button-large button-fill button-raised button-preloader m-action-button" id="tchin-mcard-btn">
+                      <span class="preloader"></span><span><img class="idp-type-logo" src="assets/logo-mcard.png" alt="MCARD"></span>
+                    </button>
+                  </div>
+                </li>
+                <li>
+                  <div class="col-100 xsmall-75 small-60 medium-40 margin-bottom-half">
+                    <button class="button button-large button-fill button-raised button-preloader m-action-button" id="tchin-marideal">
+                      <span class="preloader"></span><span><img class="idp-type-logo" src="assets/logo-marideal.png" alt="Marideal"></span>
+                    </button>
+                  </div>
+                </li>
+                <li>
+                  <div class="col-100 xsmall-75 small-60 medium-40 margin-bottom-half">
+                    <button class="button button-large button-fill button-raised button-preloader m-action-button" id="tchin-fleeti">
+                      <span class="preloader"></span><span><img class="idp-type-logo" src="assets/logo-fleet.png" alt="Fleeti"></span>
+                    </button>
+                  </div>
+                </li>
+                <li>
+                  <div class="col-100 xsmall-75 small-60 medium-40 margin-bottom-half">
+                    <button class="button button-large button-fill button-raised button-preloader m-action-button" id="tchin-id-card">
+                      <span class="preloader"></span><span><img class="idp-type-logo" src="assets/logo-id-card.png" alt="ID CARD"></span>
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--QR PAY Sheet-->
+  <div class="sheet-modal merchant-qr-sheet" data-close-by-backdrop-click="false" style="height:auto;">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="left"><a class="button button-small button-fill" id="qr-force-btn" href="#">Confirm Payment</a></div>
+        <div class="right"><a class="button button-small button-fill color-resetbtn merchant-qr-sheet-close" href="#">Cancel</a></div>
+      </div>
+    </div>
+    <div class="sheet-modal-inner">
+      <div class="page-content">
+        <div class="block text-align-center margin-top-half margin-bottom-half">
+          <div class="block-header">
+            <div class="chip chip-outline color-red">
+              <div class="chip-label">Please wait for transaction to complete</div>
+            </div>
+            <div class="logo-maucas margin-top-half">
+              <img src="assets/logo-maucas.jpg" alt="Maucas">
+          </div>
+          </div>
+                    <img src="" class="qr-pay-img" alt="QR code">
+                    <div class="block-footer no-margin-top margin-bottom-half"><b><span id="qr_merchant_name"></span><br><span id="qr_merchant_phone"></span></b></div>
+          <div class="row">
+            <div class="col">
+              <img src="assets/logo-pop-color.png" alt="POP">
+            </div>
+            <div class="col">
+              <img src="assets/logo-juice-color.png" alt="Juice">
+            </div>
+            <div class="col">
+              <img src="assets/logo-myt-color.png" alt="MyT">
+            </div>
+            <div class="col">
+              <img src="assets/logo-blink-color.png" alt="Emtel">
+            </div>
+          </div>
+        </div>
+        <input id='qr_check_amount' type='hidden' />  <input id='qr_check_order' type='hidden'  /> <input id='qr_check_provider' type='hidden'  />
+      </div>
+    </div>
+  </div>
+  <!--QR REMOTE PAYMENT Sheet-->
+  <div class="sheet-modal merchant-remote-payment-qr-sheet block-qr-remote-payment" data-close-by-backdrop-click="false" style="height:auto;">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="right"><a class="button button-small button-fill color-resetbtn block-qr-remote-payment-sheet-close" href="#">Cancel</a></div>
+      </div>
+    </div>
+    <div class="sheet-modal-inner">
+      <div class="page-content">
+        <div class="block text-align-center margin-top-half margin-bottom-half">
+          <div class="block-header">
+            <div class="chip chip-outline color-red">
+              <div class="chip-label">Please scan the QR Code to complete the payment online</div>
+            </div>
+          </div>
+          <img src="" class="qr-remote-payment-img" alt="QR code">
+          <div class="block-footer no-margin-top margin-bottom-half"><b><span id="rp_qr_merchant_name"></span></b></div>
+        </div>
+              </div>
+    </div>
+  </div>
+</div>
+<audio id="audio-enter-card" src="assets/sound/audio-enter-card.mp3" preload="auto"></audio>
+<audio id="audio-paystation-ready" src="assets/sound/audio-paystation-ready.mp3" preload="auto"></audio>
+<audio id="audio-beep" src="assets/sound/audio-beep.mp3" preload="auto"></audio>
+<audio id="audio-payment-success" src="assets/sound/audio-payment-success.mp3" preload="auto"></audio>
+<audio id="audio-approval-card" src="assets/sound/audio-approval-card.mp3" preload="auto"></audio>
+<audio id="audio-tchin-pop" src="assets/sound/audio-tchin-pop.mp3" preload="auto"></audio>
+<audio id="audio-scan-qr" src="assets/sound/audio-scan-qr.mp3" preload="auto"></audio>
+<audio id="audio-amount-ready" src="assets/sound/audio-amount-ready.mp3" preload="auto"></audio>
+<script>
+  let mymipsURL = 'https://my2.mips.mu/';
+</script>
+<script type="text/javascript">
+  const TransactionType = {
+    GOODS : 0, // 货物 GOODS
+    SERVICES : 1, // 服务 service
+    CASH : 2, // 现金 cash
+    CASHBACK : 3, //  返现
+    INQUIRY : 4, // 查询
+    TRANSFER : 5, // 转账
+    ADMIN : 6, // 管理
+    CASHDEPOSIT : 7, // 存款
+    PAYMENT : 8, // 付款 支付
+    PBOCLOG : 9, // 0x0A /*PBOC日志(电子现金日志)*/
+    SALE : 10, // 0x0B /*消费*/
+    PREAUTH : 11, // 0x0C /*预授权*/
+    ECQ_DESIGNATED_LOAD : 12, // 0x10 /*电子现金Q指定账户圈存*/
+    ECQ_UNDESIGNATED_LOAD : 13, // 0x11 /*电子现金费非指定账户圈存*/
+    ECQ_CASH_LOAD : 14, // 0x12 /*电子现金费现金圈存*/
+    ECQ_CASH_LOAD_VOID : 15, // 0x13 /*电子现金圈存撤销*/
+    ECQ_INQUIRE_LOG : 16, // 0x0A /*电子现金日志(和PBOC日志一样)*/
+    REFUND : 17,//退款
+    UPDATE_PIN : 18,     //修改密码
+    SALES_NEW : 19,
+    NON_LEGACY_MONEY_ADD : 20, /* 0x17*/
+    LEGACY_MONEY_ADD : 21,  /*0x16*/
+    BALANCE_UPDATE : 22 /*0x18*/
+  };
+  let tchin_first_step_trial = 0;
+  let tchin_second_step_trial = 0;
+  let pin_counter = 0;
+  var btConnected = false;
+  var ul = document.querySelector('#bt-device-list ul');
+  var btList = document.getElementById("bt-device-list");
+  var txtresult = document.getElementById("posResult");
+  txtresult.style.display="none";
+  function addrow(str){
+    console.log("refresh list" + str);
+    var li = document.createElement('li');
+    li.innerHTML = str.split(' ')[0];
+    ul.append(li);
+    li.onclick=function(){//on click of select
+      console.log("click " + str);
+      btList.style.display='none';
+      //posresult("bluetooth connecting");
+      console.log("bluetooth connecting");
+      $('#connect_btn').toggleClass('color-blue');
+      $('#connect_btn').text('connecting');
+      app.popup.close('#bt-list-popup');
+      cordova.plugins.dspread_pos_plugin.connectBluetoothDevice(function(message){
+        console.log("success: " +message);
+        //posresult(message);
+        if(message === 'onRequestQposConnected')
+        {
+          btConnected = true;
+          $('#connect_btn').toggleClass('color-blue');
+          $('#connect_btn').addClass('color-green');
+          $('#connect_btn').text('connected');
+        }
+        else
+        {
+          btConnected = false;
+          app.dialog.alert(message,'Error');
+          $('#connect_btn').toggleClass('color-blue');
+          $('#connect_btn').removeClass('color-green');
+          $('#connect_btn').text('connect');
+          resetForm();
+        }
+      },function(message){
+        console.log("fail: " +message);
+        //posresult(message);
+        app.dialog.alert(message,'Error');
+        btConnected = false;
+        $('#connect_btn').toggleClass('color-blue');
+        $('#connect_btn').removeClass('color-green');
+        $('#connect_btn').text('connect');
+      },true, str);
+    }
+  }
+  function posresult(text){//display the pos status
+    //btList.style.display='none';
+    txtresult.style.display='none';
+    txtresult.value = text;
+  }
+  function onReturnCustomConfigResult(str){
+    btList.style.display='none';
+    txtresult.style.display='block';
+    txtresult.value = str;
+  }
+  function scanQPos2Mode(){
+    if(!btConnected)
+    {
+      app.popup.open('#bt-list-popup');
+      btList.style.display='block';
+      txtresult.style.display='none';
+      console.log("scanQPos2Mode");
+      cordova.plugins.dspread_pos_plugin.scanQPos2Mode(function(message){
+        console.log("success: " +message);
+        addrow(message);
+      },function(message){
+        console.log("fail: " +message);
+        //posresult(message);
+        app.dialog.alert(message,'Error');
+      });
+    }
+    else
+    {
+      disConnect();
+    }
+  }
+  function openUart(){
+    //tabled.style.display = 'block';
+    txtresult.style.display = 'none';
+    console.log("openUart");
+    cordova.plugins.dspread_pos_plugin.openUart(function(message){
+      console.log("success: " +message);
+      document.getElementById('audio-paystation-ready').play();
+      //updateEMVConfigureByXml();
+      // viewQposId();
+      //posresult(message);
+    },function(message){
+      console.log("fail: " +message);
+      app.dialog.alert('Cannot connect device','Auto Connect Fail');
+      //posresult(message);
+    });
+  }
+  function resetQPOS(){
+    console.log("resetQPosStatus");
+    cordova.plugins.dspread_pos_plugin.resetQPosStatus(function(message){
+      console.log("success: " +message);
+    },function(message){
+      console.log("fail: " +message);
+    });
+  }
+  function SetBuzzer(n){
+    console.log("SetBuzzer");
+    cordova.plugins.dspread_pos_plugin.doSetBuzzerOperation(function(message){
+      console.log("success: " +message);
+    },function(message){
+      console.log("fail: " +message);
+    },n);
+  }
+  function getDeviceList(){
+    btList.style.display='block';
+    txtresult.style.display='none';
+    console.log("getDeviceList");
+    cordova.plugins.dspread_pos_plugin.getDeviceList(function(message){
+      console.log("success: " +message);
+      addrow(message);
+    },function(message){
+      console.log("fail: " +message);
+      //posresult(message);
+      app.dialog.alert(message,'Error');
+    });
+  }
+  function disConnect(){
+    cordova.plugins.dspread_pos_plugin.disconnect(function(message){
+      console.log("success: " +message);
+      //posresult(message);
+      btConnected = false;
+      $('#connect_btn').removeClass('color-green');
+      $('#connect_btn').text('connect');
+    },function(message){
+      console.log("fail: " +message);
+      //posresult(message);
+      $('#connect_btn').removeClass('color-green');
+      $('#connect_btn').text('connect');
+    });
+  }
+  function getQposInfo(){
+    console.log("getqposinfo");
+    cordova.plugins.dspread_pos_plugin.getQposInfo(function(message){
+      console.log("success: " +message);
+      //posresult(message);
+    },function(message){
+      console.log("fail: " +message);
+      //posresult(message);
+    });
+  }
+  function viewQposId(){
+    cordova.plugins.dspread_pos_plugin.getQposId(function(message){
+      console.log("success: " +message);
+      $('#device_id').val(message);
+      loadUsers();
+      //posresult(message);
+    },function(message){
+      console.log("fail: " +message);
+      //posresult(message);
+    });
+  }
+  function updateTMK(){
+    cordova.plugins.dspread_pos_plugin.setMasterKey(function(message){
+      console.log("success: " +message);
+      //posresult(message);
+    },function(message){
+      console.log("fail: " +message);
+      //posresult(message);
+    },"1A4D672DCA6CB3351FD1B02B237AF9AE", "08D7B4FB629D0885");
+  }
+  /*function updateIPEK(){
+    cordova.plugins.dspread_pos_plugin.updateIPEK(function(message){
+      console.log("success: " +message);
+      posresult(message);
+    },function(message){
+      console.log("fail: " +message);
+      posresult(message);
+    },"00","09118012400705E00001","1A4D672DCA6CB3351FD1B02B237AF9AE","08D7B4FB629D0885","09118012400705E00001","1A4D672DCA6CB3351FD1B02B237AF9AE","08D7B4FB629D0885","09118012400705E00001","1A4D672DCA6CB3351FD1B02B237AF9AE","08D7B4FB629D0885");
+  }*/
+  //BDK - FD683B6849F83D322A256D1AE354974C (ICPS)
+  /*function updateIPEK(){
+    cordova.plugins.dspread_pos_plugin.updateIPEK(function(message){
+      console.log("success: " +message);
+      alert('updateIPEK:' + message);
+    },function(message){
+      console.log("fail: " +message);
+      alert('updateIPEK:' + message);
+    },"00","01234111111111E00001","637ECEAAA170A4B5FE3DCFF928D9B3E9","9795B3FEC7BB0E2F","01234111111111E00001","637ECEAAA170A4B5FE3DCFF928D9B3E9","9795B3FEC7BB0E2F","01234111111111E00001","637ECEAAA170A4B5FE3DCFF928D9B3E9","9795B3FEC7BB0E2F");
+  }*/
+  //BDK - 7419DDF9B1C4287F3AC62CB008188B92 (ICPS 2)
+  function updateIPEK(){
+    cordova.plugins.dspread_pos_plugin.updateIPEK(function(message){
+      console.log("success: " +message);
+      alert('updateIPEK:' + message);
+    },function(message){
+      console.log("fail: " +message);
+      alert('updateIPEK:' + message);
+    },"00","01234111111111E00001","D8C7EAA8EB4FE7B7762122F642E6B434","0047DF36D89954EC","01234111111111E00001","D8C7EAA8EB4FE7B7762122F642E6B434","0047DF36D89954EC","01234111111111E00001","D8C7EAA8EB4FE7B7762122F642E6B434","0047DF36D89954EC");
+  }
+  function updateEMVConfigureByXml(){
+    console.log("start update emv configure, pls wait...");
+    readTextFile('emv-profile-psmax-online-pin.xml');
+  }
+  function updateFirmware(){
+    console.log("update Firmware");
+    //posresult("start update Firmware, pls wait...");
+    cordova.plugins.dspread_pos_plugin.updatePosFirmware(function(message){
+      console.log("excute update FW success:"+message);
+      //this.posresult(message);
+    },function(message){
+      console.log("excute update FW fail:"+message);
+      //this.posresult(message);
+    },"fw220422.asc");
+  }
+  function readTextFile(file)
+  {
+    var rawFile = new XMLHttpRequest();
+    rawFile.open("GET", file, false);
+    rawFile.onreadystatechange = function ()
+    {
+      if(rawFile.readyState === 4)
+      {
+        if(rawFile.status === 200 || rawFile.status == 0)
+        {
+          var allText = rawFile.responseText;
+          console.log("success: " +allText);
+          cordova.plugins.dspread_pos_plugin.updateEMVConfigByXml(function(message){
+            console.log("success: " +message);
+            set_emv_update_status();
+            viewQposId();
+            //posresult(message);
+          },function(message){
+            console.log("fail: " +message);
+            //posresult(message);
+          },allText);
+        }
+      }
+    }
+    rawFile.send(null);
+  }
+  function dotrade(){ //for D20
+    console.log("dotrade");
+    cordova.plugins.dspread_pos_plugin.doTrade(function(message){
+      console.log("do trade success: " +message);
+      //posresult("do trade: " +message);
+      if(message === "onRequestSetAmount"){
+        setAmount();
+      }
+      else if(message === 'onRequestWaitingUser'){
+        //app.toast.show({text:'Enter or Tap card',position:'bottom',closeTimeout: 5000});
+        document.getElementById('audio-enter-card').play();
+      }
+      else if(message.startsWith("onRequestOnlineProcess: ")){
+        var onlineData = message.replace("onRequestOnlineProcess: ", "");
+        console.log(onlineData);
+        processPayment(onlineData,'chip');
+        /*var tagDict = parseTLV(onlineData);
+        for(var key in tagDict){
+          console.log("tag: " + key + " value: " + tagDict[key]);
+        }*/
+      }
+      else if(message.startsWith("NFCbatchData: ")){
+        var onlineData = message.replace("NFCbatchData: ", "");
+        console.log(onlineData);
+        app.dialog.preloader('Processing', 'default');
+        processPayment(onlineData,'nfc');
+      }
+      else if(message == "onQposRequestPinResult"){
+        pin_counter++;
+        miniNumberKeyboard();
+        if(pin_counter > 1)
+        {
+          app.dialog.close();
+          //app.dialog.alert('Incorrect PIN');
+          app.toast.show({text:'Incorrect pin',position:'top',closeTimeout: 3000});
+        }
+        var position = getPosition();
+        console.log("position:"+position);
+        cordova.plugins.dspread_pos_plugin.sendPosition(function(message){
+          console.log("success: " +message);
+        },function(message){
+          console.log("fail: " +message);
+        },[position]);
+      }
+      else if(message.startsWith("Num:")){
+        var num = message.slice(4);
+        pinInput(num);
+        if(num == -1)
+        {
+          app.dialog.preloader('Processing', 'default');
+        }
+      }
+    },function(message){
+      console.log("do trade fail: " +message);
+      //posresult(message);
+      if(message === 'onError:CMD TIMEOUT')
+      {
+        app.dialog.alert('Operation timeout','Error',function (){
+          resetForm();
+        });
+      }
+      else if(message === 'CANCEL')
+      {
+        app.dialog.close();
+        resetForm();
+      }
+      else
+      {
+        if(message != 'DECLINED')
+        {
+          app.dialog.alert('An error has occurred','Error',function (){
+            resetForm();
+          });
+        }
+      }
+    },['120']);
+  }
+  function setAmount(){ //In new app
+    console.log("setAmount");
+    var amount = $('#payment_amount').val();
+    if(amount){
+      cordova.plugins.dspread_pos_plugin.setAmount(function(message){
+        console.log("setAmount->success: " + message);
+        //this.posresult(message);
+      },function(message){
+        console.log("setAmount->fail: " + message);
+        //this.posresult(message);
+        if(message === 'onError:CMD TIMEOUT')
+        {
+          app.dialog.alert('Operation timeout','Error',function (){
+            resetForm();
+          });
+        }
+        else
+        {
+          app.dialog.alert('An error has occurred','Error',function (){
+            resetForm();
+          });
+        }
+      },amount,0,"0156",TransactionType.PAYMENT);
+    }
+  }
+  function pollOnMifareCard(){
+    cordova.plugins.dspread_pos_plugin.pollOnMifareCard(function(message){
+      console.log("pollOnMifareCard->success: " + message);
+      if(message.startsWith("statuString:poll card success!")){
+        document.getElementById('audio-beep').play();
+        var uid = message.split("\n")[1];
+        console.log(parseInt(uid,16));
+        checkUID(parseInt(uid,16),'payment');
+      }
+      else
+      {
+        app.dialog.alert('An error has occurred','Error',function (){
+          resetForm();
+        });
+      }
+      //this.posresult(message);
+    },function(message){
+      console.log("pollOnMifareCard->fail: " + message);
+      //this.posresult(message);
+      app.dialog.alert('An error has occurred','Error',function (){
+        resetForm();
+      });
+    },60);
+  }
+  function TchinFidelityCard(){
+    window.fidelityToast = app.toast.create({
+      text: 'Connect Fidelity Card',
+      position: 'top',
+    }).open();
+    cordova.plugins.dspread_pos_plugin.pollOnMifareCard(function(message){
+      console.log("pollOnMifareCard->success: " + message);
+      if(message.startsWith("statuString:poll card success!")){
+        document.getElementById('audio-beep').play();
+        var uid = message.split("\n")[1];
+        console.log(parseInt(uid,16));
+        $('.toast-text').text('Fidelity Card Connected');
+        $('.card-help-block #img-tchin-fidelity').hide();
+        $('.card-help-block').hide();
+        $('.block_scan_fidelity_card').hide();
+        $('.m-action-button').show();
+        $('.tchin-block-border').show();
+      }
+      else
+      {
+        app.dialog.alert('An error has occurred','Error',function (){
+          resetForm();
+        });
+      }
+      //this.posresult(message);
+    },function(message){
+      console.log("pollOnMifareCard->fail: " + message);
+      //this.posresult(message);
+      app.dialog.alert('An error has occurred','Error',function (){
+        resetForm();
+      });
+    },60);
+  }
+  function powerOnNFC(){
+    console.log("tchin_first_step_trial: " + tchin_first_step_trial);
+    document.getElementById('audio-tchin-pop').play();
+    //app.toast.show({text:'TCHIN or Tap your NFC phone',position:'bottom',closeTimeout: 5000});
+    cordova.plugins.dspread_pos_plugin.powerOnNFC(function(message){
+      console.log("powerOnNFC->success: " + message);
+      //this.posresult(message);
+      sendApduByNFC('00A4040007D276000085010100');
+    },function(message){
+      console.log("powerOnNFC->fail: " + message);
+      if(message === 'onError:CMD TIMEOUT')
+      {
+        app.dialog.alert('Operation timeout','Error',function (){
+          resetForm();
+        });
+      }
+      else
+      {
+        tchin_first_step_trial++;
+        //this.posresult(message);
+        if(tchin_first_step_trial < 5)
+        {
+          setTimeout(function () {
+            powerOnNFC();
+          }, 1000);
+        }
+        else
+        {
+          app.dialog.alert('Cannot connect to NFC device','Error',function (){
+            resetForm();
+          });
+        }
+      }
+    },false,60);
+  }
+  function sendApduByNFC(apdu){
+    console.log("tchin_second_step_trial: " + tchin_second_step_trial);
+    cordova.plugins.dspread_pos_plugin.sendApduByNFC(function(message){
+      console.log("sendApduByNFC->success: " + message);
+      //SetBuzzer(1);
+      document.getElementById('audio-beep').play();
+      var number = message.split("\n")[1];
+      console.log(number);
+      //this.posresult(message);
+      sendPopRequest('tchin',number);
+    },function(message){
+      console.log("sendApduByNFC->fail: " + message);
+      //this.posresult(message);
+      tchin_second_step_trial++;
+      if(tchin_first_step_trial < 5)
+      {
+        setTimeout(function () {
+          sendApduByNFC('00A4040007D276000085010100');
+        }, 1000);
+      }
+      else
+      {
+        app.dialog.alert('Cannot connect to emulating app','Error',function (){
+          resetForm();
+        });
+      }
+    },apdu,60);
+  }
+  function powerOffNFC(){
+    cordova.plugins.dspread_pos_plugin.powerOffNFC(function(message){
+      console.log("powerOffNFC->success: " + message);
+      //this.posresult(message);
+    },function(message){
+      console.log("powerOffNFC->fail: " + message);
+      //this.posresult(message);
+    },10);
+  }
+</script>
+<script src="cordova.js"></script>
+<!-- Framework7 library -->
+<script src="framework7/framework7-bundle.min.js"></script>
+<script src="framework7/framework7-keypad.js"></script>
+<!-- Cordova APIs -->
+<script src="js/cordova-app.js"></script>
+<!-- App routes -->
+<script src="js/routes.js"></script>
+<!-- App store -->
+<script src="js/store.js"></script>
+<!-- App scripts -->
+<script src="js/app.js"></script>
+<!-- App Mini Till scripts -->
+<script src="js/till.js"></script>
+<!-- App Remote Payments scripts -->
+<script src="js/remote-payment.js"></script>
+<!-- App Transactions scripts -->
+<script src="js/transactions.js"></script>
+<script src="js/bluetoothle.js"></script>
+<script type="text/javascript" src="js/Keyboard1.js"></script>
+<script>
+  var AmountKeypad = app.keypad.create({
+    inputEl: '#amount_to_pay',
+    openIn: 'popover',
+    toolbarCloseText: 'CONFIRM',
+    value: '',
+  });
+  AmountKeypad.on('keypadOpen',function (){
+    //console.log('Amount keypad opened');
+    $('#amount_to_pay').focus();
+  });
+  var IdpPhoneKeypad = app.keypad.create({
+    inputEl: '#idp-phone-num',
+    openIn: 'popover',
+    toolbarCloseText: 'CONFIRM',
+    value: '',
+    dotButton:false,
+    valueMaxLength:8
+  });
+  var UserPinKeypad = app.keypad.create({
+    inputEl: '#user-pin',
+    openIn: 'sheet',
+    toolbarCloseText: 'OK',
+    value: '',
+    dotButton:false,
+    valueMaxLength:4
+  });
+  var linkSelectCurrency = app.smartSelect.create({
+    el: '.link-select-currency',
+    openIn: 'popover',
+    closeOnSelect: true,
+  });
+  function getPhoneNum(){
+    console.log('sms chosen');
+    window.dialogPaymentSuccess.close();
+    var dialogSMS = app.dialog.create({
+      title: 'SMS receipt',
+      text: 'Enter mobile number',
+      content: '<div class="dialog-input-field item-input"><div class="item-input-wrap"><input class="dialog-input dialog-input-sms-num" type="number"></div></div>',
+      buttons: [
+        {
+          text: 'Cancel', onClick: function () {
+            console.log('close dialog');
+            dialogSMS.close();
+            resetForm();
+          }
+        },
+        {
+          text: 'OK', onClick: function (dialog) {
+            console.log('ok ');
+            var number = dialog.$el.find('.dialog-input').val();
+            if(number !== '')
+            {
+              if(number.length === 8)
+              {
+                sendReceipt(number,$('#o').val(),'sms');
+              }
+              else
+              {
+                app.dialog.alert('Invalid number','Error',function (){
+                  resetForm();
+                });
+              }
+            }
+            else
+            {
+              app.dialog.alert('Invalid number','Error',function (){
+                resetForm();
+              });
+            }
+          }
+        }
+      ],
+      on: {
+        open: function () {
+          $('.dialog-input-sms-num').focus();
+        }
+      },
+      destroyOnClose: true
+    }).open();
+  }
+  function getEmailAdd(){
+    console.log('email chosen');
+    window.dialogPaymentSuccess.close();
+    var dialogSMS = app.dialog.create({
+      title: 'Email receipt',
+      text: 'Enter email address',
+      content: '<div class="dialog-input-field item-input"><div class="item-input-wrap"><input class="dialog-input dialog-input-email" type="email" validate></div></div>',
+      buttons: [
+        {
+          text: 'Cancel', onClick: function () {
+            console.log('close dialog');
+            dialogSMS.close();
+            resetForm();
+          }
+        },
+        {
+          text: 'OK', onClick: function (dialog) {
+            console.log('ok ');
+            var email = dialog.$el.find('.dialog-input').val();
+            if(email !== '')
+            {
+              console.log(email);
+              if(dialog.$el.find('.dialog-input').hasClass('input-invalid'))
+              {
+                app.dialog.alert('Invalid email','Error',function (){
+                  resetForm();
+                });
+              }
+              else
+              {
+                sendReceipt(email,$('#o').val(),'email');
+              }
+            }
+            else
+            {
+              app.dialog.alert('Invalid email','Error',function (){
+                resetForm();
+              });
+            }
+          }
+        }
+      ],
+      on: {
+        open: function () {
+          $('.dialog-input-email').focus();
+        }
+      },
+      destroyOnClose: true
+    }).open();
+  }
+  function printReceipt(){
+    console.log('Print receipt');
+  }
+  function addCurrency() {
+    $('#smart-select-currency').append('<option value="MUR">MUR</option><option value="EUR">EUR</option><option value="USD">USD</option>');
+    $('.link-select-currency .item-after').text('MUR');
+  }
+  $('.user-sof-sheet-close').on('click',function(e){
+    e.preventDefault();
+    //userSOFsheet.close();
+    app.sheet.close('.user-sof-sheet');
+    resetForm();
+  });
+  $('.merchant-qr-sheet-close').on('click',function(e){
+    e.preventDefault();
+    var dialogConfirm = app.dialog.create({
+      title: 'Confirmation',
+      text: 'Are you sure you want to cancel this operation?',
+      buttons: [
+        {
+          text: 'Back', onClick: function () {
+            dialogConfirm.close();
+          }
+        },
+        {
+          text: 'Yes', onClick: function (dialog) {
+            app.sheet.close('.merchant-qr-sheet');
+            app.dialog.preloader('Cancelling...','default');
+            //resetForm();
+            let provider = $('#qr_check_provider').val();
+            let orderID = $('#qr_check_order').val();
+            let qr_check_amount = $('#qr_check_amount').val();
+            if(provider == 'JUICE')
+            {
+                //stop sms listen in case of JUICE QR
+                stop_smslisten();
+            }
+            else{
+                //stop order status check
+                stop_qr_order_verification();
+            }
+            var id_merchant = $('#m').val();
+            var id_form = $('#f').val();
+            var id_user = $('#creator_id').val();
+            var formData = new FormData();
+            formData.append('amount', qr_check_amount);
+            formData.append('id_order', orderID);
+            formData.append('m', id_merchant);
+            formData.append('f', id_form);
+            formData.append('id_user', id_user);
+            formData.append('ref', 'cancel_qr_order');
+            app.request({
+                crossDomain: true,
+                method: 'POST',
+                url: mymipsURL+'mips-app/mips-app.php',
+                data: formData,
+                dataType: 'json',
+                success: function(data)
+                {
+                    app.dialog.close();
+                    resetForm();
+                },
+                error: function (data, errorThrown){
+                    app.dialog.close();
+                    console.log(data);
+                    console.log(errorThrown);
+                    app.dialog.alert('An error has occurred while cancelling the order',function (){
+                        resetForm();
+                    });
+                }
+            });
+          }
+        }
+      ],
+      destroyOnClose: true
+    }).open();
+  });
+  $('#user-sof-confirm-btn').on('click',function(e){
+    e.preventDefault();
+    //userSOFsheet.close();
+    app.sheet.close('.user-sof-sheet');
+    app.dialog.preloader('Processing', 'default');
+    setTimeout(function () {
+      app.dialog.close();
+      $('.card-help-block #img-tchin-mcard').hide();
+      $('.card-help-block #img-tchin-fidelity').hide();
+      $('.card-help-block #img-success-msg').show();
+      var paid_amt = $('#amount_to_pay').val();
+      app.dialog.alert('Paid with '+$('input[name="user-sof-radio"]:checked').attr('data-sof-type')+ ' ending in *** '+$('input[name="user-sof-radio"]:checked').attr('data-sof-end')+'<br> Rs '+paid_amt+' awarded to your fidelity card','Payment Success',function (){
+        resetForm();
+        if($('#is_till_integration').val() == 1){
+          checknewtransaction();
+        }
+      });
+    }, 3000);
+  });
+  $('#currency-link').on('click', function (e) {
+    e.preventDefault();
+    app.dialog.alert('Multiple currency not activated on this terminal','Error');
+  });
+  $('.mips-menu-link').on('click', function (e) {
+    e.preventDefault();
+    /*$('.card-help-block #img-tchin-fidelity').hide();
+    $('.card-help-block').hide();
+    $('.m-action-button').hide();
+    $('.tchin-block-border').hide();
+    $('.amount_section').hide();*/
+    app.panel.close();
+  });
+  $('#fidelity-link').on('click', function (e) {
+    e.preventDefault();
+    $('.card-help-block #img-tchin-fidelity').show();
+    $('.card-help-block').show();
+    $('.block_scan_fidelity_card').show();
+    $('.m-action-button').hide();
+    $('.tchin-block-border').hide();
+    app.panel.close();
+    TchinFidelityCard();
+  });
+  $('#scan_fidelity_card').on('click', function (e) {
+    e.preventDefault();
+    //OpenCamera();
+    QrScanner();
+  });
+  $('#logout-link').on('click', function (e) {
+    e.preventDefault();
+    app.dialog.preloader('Signing out', 'default');
+    resetForm();
+        clear_db();
+    setTimeout(function () {
+      app.panel.close();
+      app.dialog.close();
+      app.loginScreen.open('#my-login-screen');
+    }, 3000);
+  });
+  $('#reset-btn').on('click', function (e) {
+    e.preventDefault();
+    resetForm();
+  });
+  $('#update-fw-btn').on('click', function (e) {
+    e.preventDefault();
+    updateIPEK();
+  });
+  $('#login-btn').on('click', function (e) {
+    e.preventDefault();
+    var user = $('#select-user').val();
+    var pin = $('#user-pin').val();
+    if(user == '')
+    {
+      app.dialog.alert('Please select user','Error');
+    }
+    else if(pin == '')
+    {
+      app.dialog.alert('Please enter pin','Error');
+    }
+    else if(pin.length != 4)
+    {
+      app.dialog.alert('Please enter valid pin','Error');
+    }
+    else
+    {
+      $(this).attr('disabled', true);
+      $('#select-user').attr('disabled', true);
+      $('#user-pin').attr('disabled', true);
+      $(this).addClass('button-loading');
+      verify_user();
+    }
+  });
+  $('#tchin-pop, #tchin-juice').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      $('.m-action-button').attr('disabled', true);
+      $(this).addClass('button-loading');
+      $('.card-help-block #img-tap-phone').show();
+      $('.card-help-block').show();
+      $('.m-action-button').hide();
+      $('#tchin-pop').closest('.row').addClass('hide-row');
+      $('#smart-payment-btn').closest('.row').addClass('hide-row');
+      $('#phone-pop').closest('.row').addClass('hide-row');
+      $('.tchin-block-border').hide();
+      $('.tchin-fallback-scan-qr').show();
+      $('.remarks-list').hide();
+      powerOnNFC();
+    }
+  });
+  $('#smart-payment-btn').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      app.sheet.open('.smart-card-sheet');
+    }
+  });
+  $('#qr-force-btn').on('click', function (e) {
+    e.preventDefault();
+    var dialogConfirm = app.dialog.create({
+      //title: 'Confirmation',
+      content: '<div class="block no-hairlines no-margin-top margin-bottom-half no-padding"><div class="text-align-center">\n' +
+              '          <div class="chip chip-outline color-red">\n' +
+              '          <div class="chip-label">Warning!</div>\n' +
+              '        </div></div></div><div class="block no-hairlines no-margin no-padding"><div class="text-align-left no-margin-bottom">You must first check the user\'s phone &amp; you will be required to take a photo of the payment receipt. <br><br> <b>Do you acknowledge &amp; confirm the payment was successful?</b></div></div>',
+      buttons: [
+        {
+          text: 'Back', onClick: function () {
+            dialogConfirm.close();
+          }
+        },
+        {
+          text: 'Yes', onClick: function (dialog) {
+            var provider = $('#qr_check_provider').val();
+            var order_id = $('#qr_check_order').val();
+            var amount = $('#qr_check_amount').val();
+            navigator.camera.getPicture(function(imageData){
+            //var image_src = "data:image/jpeg;base64," + imageData;
+            console.log(imageData);
+            if(provider == 'JUICE')
+            {
+              //stop sms listen in case of JUICE QR
+              stop_smslisten();
+            }
+            else{
+              //stop order status check
+              stop_qr_order_verification();
+              //app.sheet.close('.merchant-qr-sheet');
+              //resetForm();
+            }
+            update_payment_qr(order_id,amount,imageData);
+            }, function(message){
+              dialogConfirm.close();
+              app.dialog.alert(message,'Fail');
+            }, { quality: 75,
+              destinationType: Camera.DestinationType.DATA_URL
+            });
+          }
+        }
+      ],
+      destroyOnClose: true
+    }).open();
+  });
+  $('#tchin-mcard-btn, #tchin-marideal, #tchin-fleeti, #tchin-id-card').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      app.sheet.close('.smart-card-sheet');
+      $('.m-action-button').attr('disabled', true);
+      $(this).addClass('button-loading');
+      if($(this).attr('id')==='tchin-mcard-btn')
+      {
+        $('.card-help-block #img-tchin-mcard').show();
+      }
+      else
+      {
+        $('.card-help-block #img-tchin-fidelity').show();
+      }
+      $('.card-help-block').show();
+      $('.m-action-button').hide();
+      $('.tchin-block-border').hide();
+      $('.idp-block').hide();
+      //powerOnNFC();
+      pollOnMifareCard();
+    }
+  });
+  $('#phone-pop').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      $('.m-action-button').attr('disabled', true);
+      $(this).addClass('button-loading');
+      $('.m-action-button').hide();
+      $('.tchin-block-border').hide();
+      $('.idp-phone-block').show();
+      $('#tchin-pop').closest('.row').addClass('hide-row');
+      $('#smart-payment-btn').closest('.row').addClass('hide-row');
+      $('#phone-pop').closest('.row').addClass('hide-row');
+      $('.remarks-list').hide();
+      //IdpPhoneKeypad.open();
+    }
+  });
+  $('#show-qr-btn').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      var amount = $('#amount_to_pay').val();
+      $('.remarks-list').hide();
+      prep_qr();
+    }
+  });
+  $('#scan-qr-btn').on('click', function (e) {
+    e.preventDefault();
+    resetQPOS();
+    var amount = $('#amount_to_pay').val();
+    $('.remarks-list').hide();
+    prep_qr();
+  });
+  $('#confirm-phone-idp').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      var phone_num = $('#idp-phone-num').val();
+      if(phone_num != '')
+      {
+        console.log(phone_num.length);
+        if(phone_num.length === 8)
+        {
+          $(this).attr('disabled', true);
+          $(this).addClass('button-loading');
+          sendPopRequest('phone',phone_num);
+        }
+        else{
+          app.dialog.alert('Incorrect number','Error');
+        }
+      }
+      else
+      {
+        app.dialog.alert('Enter phone number','Error');
+      }
+    }
+  });
+  $('#confirm-phone-azap').on('click', function (e) {
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      var phone_num = $('#idp-phone-num').val();
+      if(phone_num != '')
+      {
+        console.log(phone_num.length);
+        if(phone_num.length === 8)
+        {
+          $(this).attr('disabled', true);
+          $(this).addClass('button-loading');
+          checkPhoneAzap(phone_num,'payment');
+        }
+        else{
+          app.dialog.alert('Incorrect number','Error');
+        }
+      }
+      else
+      {
+        app.dialog.alert('Enter phone number','Error');
+      }
+    }
+  });
+  $('#confirm_amount').on('click', function (e){
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      $('.m-action-button').attr('disabled', true);
+      $(this).addClass('button-loading');
+      $('.card-help-block #img-enter-card').show();
+      $('.card-help-block').show();
+      $('.m-action-button').hide();
+      $('.tchin-block-border').hide();
+      $('.idp-block').hide();
+      $('.remarks-list').hide();
+      dotrade();
+    }
+  });
+  function processPayment(data,friction_type){
+    //app.dialog.preloader('Processing', 'default');
+    document.getElementById('audio-approval-card').play();
+    var o = app.utils.id('xxxx-xxxx-xxxx-xxxx');
+    $('#o').val(o);
+    var formData = new FormData();
+    formData.append('ref', 'process_app_payment');
+    formData.append('amount', $('#payment_amount').val());
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    if($('#is_till_integration').val() == "1")
+      formData.append('o', $('#qr_check_order').val());
+    else
+      formData.append('o', o);
+    formData.append('op_id', $('#op_id').val());
+    formData.append('r_pwd', $('#r_pwd').val());
+    formData.append('creator_id', $('#creator_id').val());
+    formData.append('creator_email', $('#creator_email').val());
+    formData.append('device_id', $('#device_id').val());
+    formData.append('remarks', $('#remarks').val());
+    formData.append('connected_user_name', $('#connected_user_name').val());
+    //formData.append('currency', $('input[name="radio-currency"]:checked').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('is_till_integration', $('#is_till_integration').val());
+    formData.append('tlv_data', data);
+    formData.append('friction_type', friction_type);
+    console.log(formData);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        app.dialog.close();
+        console.log(data);
+        //alert(data);
+        //var jsonData = JSON.parse(data);
+        //alert(jsonData.result);
+        if(data.result === 'success')
+        {
+          document.getElementById('audio-payment-success').play();
+          $('.card-help-block #img-enter-card').hide();
+          $('.card-help-block #img-success-msg').show();
+          window.dialogPaymentSuccess = app.dialog.create({
+            content: '<div class="block no-hairlines no-margin-top margin-bottom-half no-padding"><div class="text-align-center"><div class="payment-success-icon"><i class="f7-icons">checkmark_alt_circle</i></div><div class="payment-success-text">Payment Success</div></div></div><div class="block no-hairlines no-margin no-padding"><div class="text-align-center margin-bottom-half">Select receipt options:</div><div class="row"><div class="col"><button class="button button-fill button-raised" id="btn-receipt-sms" onclick="getPhoneNum();">SMS</button></div><div class="col"><button class="button button-fill button-raised" id="btn-receipt-email" onclick="getEmailAdd();">Email</button></div></div></div>',
+            buttons: [
+              {
+                text: 'Back', onClick: function () {
+                  console.log('close dialog');
+                  window.dialogPaymentSuccess.close();
+                  resetForm();
+                  if($('#is_till_integration').val() == 1){
+                    checknewtransaction();
+                  }
+                }
+              }
+            ],
+            destroyOnClose: true
+          }).open();
+          //call api request_order_response
+        }
+        else if(data.result === 'fail')
+        {
+          console.log(data.reason);
+          displayGeneralFailMSG(data.reason);
+        }
+        else
+        {
+          // app.dialog.alert('Payment Failed','Fail',function (){
+          //   resetForm();
+          // });
+          displayGeneralFailMSG();
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }
+  function processSmartPayment(data,friction_type,associated_number=null){
+    //app.dialog.preloader('Processing', 'color-green');
+    var o = $('#o').val();
+    var formData = new FormData();
+    formData.append('ref', 'process_app_smartpayment');
+    formData.append('amount', $('#payment_amount').val());
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', o);
+    formData.append('op_id', $('#op_id').val());
+    formData.append('r_pwd', $('#r_pwd').val());
+    formData.append('creator_id', $('#creator_id').val());
+    formData.append('creator_email', $('#creator_email').val());
+    formData.append('device_id', $('#device_id').val());
+    formData.append('remarks', $('#remarks').val());
+    formData.append('connected_user_name', $('#connected_user_name').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('data', data);
+    formData.append('friction_type', friction_type);
+    if(friction_type === 'nfc')
+    {
+      formData.append('associated_number', associated_number);
+    }
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        app.dialog.close();
+        console.log(data);
+        if(data.result === 'success')
+        {
+          document.getElementById('audio-payment-success').play();
+          $('.card-help-block #img-tchin-mcard').hide();
+          $('.card-help-block #img-tchin-fidelity').hide();
+          $('.card-help-block #img-success-msg').show();
+          var paid_amt = $('#amount_to_pay').val();
+          app.dialog.alert('Paid with '+data.card_type+' ending *** '+data.card_last_four+'<br> Rs '+paid_amt+' awarded to your fidelity card','Payment Success',function (){
+            resetForm();
+            if($('#is_till_integration').val() == 1){
+              checknewtransaction();
+            }
+          });
+        }
+        else
+        {
+          app.dialog.alert('Payment Failed','Fail',function (){
+            resetForm();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }
+  function checkUID(uid,process){
+    app.dialog.preloader('Processing', 'color-green');
+    var o = app.utils.id('xxxx-xxxx-xxxx-xxxx');
+    $('#o').val(o);
+    var amount = $('#payment_amount').val();
+    var amount_trigger_otp = $('#amount_trigger_otp').val();
+    var formData = new FormData();
+    formData.append('ref', 'check_uid');
+    formData.append('amount', amount);
+    formData.append('amount_trigger_otp', amount_trigger_otp);
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', o);
+    //formData.append('currency', $('input[name="radio-currency"]:checked').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('uid', uid);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        console.log(data);
+        if(data.result === 'nfc_registered')
+        {
+          if(process === 'payment')
+          {
+            const demoUID_sof_listings = ["4012415288","1233292918681984","1327659593","1171720267526528","1201407081476480"];
+            if(demoUID_sof_listings.includes(uid.toString())) //For demo - listing of payment options
+            {
+              listUserSOF();
+            }
+            else
+            {
+              if(amount < amount_trigger_otp)
+              {
+                processSmartPayment(uid,'nfc',data.registered_phone);
+              }
+              else
+              {
+                sendOTP(data.registered_phone, o, uid);
+              }
+            }
+          }
+        }
+        else
+        {
+          app.dialog.close();
+          app.dialog.alert('Card not registered','Fail',function (){
+            resetForm();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }
+  function checkPhoneAzap(number,process){
+    app.dialog.preloader('Processing', 'color-green');
+    var o = app.utils.id('xxxx-xxxx-xxxx-xxxx');
+    $('#o').val(o);
+    var amount = $('#payment_amount').val();
+    var amount_trigger_otp = $('#amount_trigger_otp').val();
+    var formData = new FormData();
+    formData.append('ref', 'check_phone_azap');
+    formData.append('amount', amount);
+    formData.append('amount_trigger_otp', amount_trigger_otp);
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', o);
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('number', number);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        console.log(data);
+        if(data.result === 'tel_registered')
+        {
+          if(process === 'payment')
+          {
+            if(amount < amount_trigger_otp)
+            {
+              processSmartPayment(number,'phone');
+            }
+            else
+            {
+              sendOTP(number, o);
+            }
+          }
+        }
+        else
+        {
+          app.dialog.close();
+          app.dialog.alert('Number not registered','Fail',function (){
+            resetForm();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }
+  //let abortController = app.request.abortController();
+  function sendPopRequest(source,num){
+    var o = app.utils.id('xxxx-xxxx-xxxx-xxxx');
+    $('#o').val(o);
+    app.dialog.preloader('Processing', 'color-green');
+    /*var dialogPopRequest = app.dialog.create({
+      content: '<div class="text-align-center"><div class="dialog-title">Processing</div><div class="preloader color-default margin-top-half"><span class="preloader-inner text-align-center">\n' +
+              '    <svg viewBox="0 0 36 36">\n' +
+              '      <circle cx="18" cy="18" r="16"></circle>\n' +
+              '    </svg>\n' +
+              '  </span></div></div>',
+      buttons: [
+        {
+          text: 'Cancel',
+          cssClass: 'cancel-pop-request-btn', onClick: function () {
+            console.log('cancel operation');
+            var dialogConfirm = app.dialog.create({
+              title: 'Confirmation',
+              text: 'Are you sure you want to cancel this operation?',
+              buttons: [
+                {
+                  text: 'No', onClick: function () {
+                    dialogConfirm.close();
+                    dialogPopRequest.open();
+                  }
+                },
+                {
+                  text: 'Yes', onClick: function (dialog) {
+                    console.log('yes cancel');
+                    dialogConfirm.close();
+                    dialogPopRequest.setTitle('Cancelling');
+                    dialogPopRequest.open();
+                    $('.dialog-buttons').hide();
+                    cancelPopRequest(o);
+                  }
+                }
+              ],
+              destroyOnClose: true
+            }).open();
+          }
+        }
+      ],
+      destroyOnClose: false
+    }).open();*/
+    var formData = new FormData();
+    formData.append('ref', 'pop_request');
+    formData.append('amount', $('#payment_amount').val());
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', o);
+    formData.append('op_id', $('#op_id').val());
+    formData.append('r_pwd', $('#r_pwd').val());
+    formData.append('creator_id', $('#creator_id').val());
+    formData.append('creator_email', $('#creator_email').val());
+    formData.append('device_id', $('#device_id').val());
+    formData.append('remarks', $('#remarks').val());
+    formData.append('connected_user_name', $('#connected_user_name').val());
+    //formData.append('currency', $('input[name="radio-currency"]:checked').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('source', source);
+    formData.append('num', num);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        app.dialog.close();
+        console.log(data);
+        if(data.result === 'success')
+        {
+          document.getElementById('audio-payment-success').play();
+          $('.card-help-block #img-tap-phone').hide();
+          $('.card-help-block').show();
+          $('.card-help-block #img-success-msg').show();
+          // app.dialog.alert('Payment Successful','Success',function (){
+          //   resetForm();
+          // });
+          displayGeneralSuccessMSG();
+        }
+        else
+        {
+          // app.dialog.alert('Payment Failed','Fail',function (){
+          //   resetForm();
+          // });
+          displayGeneralFailMSG();
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      },
+      //abortController: abortController
+    });
+  }
+  /*function cancelPopRequest(order_id){
+    console.log('cancel pop request: '+order_id);
+    console.log(abortController);
+    //abortController.abort();
+    var formData = new FormData();
+    formData.append('ref', 'cancel_pop_request');
+    formData.append('amount', $('#payment_amount').val());
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', order_id);
+    formData.append('currency', $('#smart-select-currency').val());
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        app.dialog.close();
+        console.log(data);
+        if(data.result === 'success')
+        {
+          $('.card-help-block #img-tap-phone').hide();
+          app.dialog.alert('The payment request has been cancelled.',function (){
+            resetForm();
+          });
+        }
+        else
+        {
+          app.dialog.alert('The payment request could not be cancelled.','Error',function (){
+            resetForm();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }*/
+  function resetForm(){
+    console.log('reset');
+    document.getElementById('payment_form').reset();
+    $('.m-action-button').attr('disabled', false);
+    $('#amount_to_pay').removeAttr('disabled');
+    $('.m-action-button').removeAttr('disabled');
+    $('.m-action-button').removeClass('button-loading');
+    $('.m-action-button').show();
+    $('.tchin-block-border').show();
+    $('.idp-block').show();
+    $('.card-help-block').hide();
+    $('.block_scan_fidelity_card').hide();
+    $('.tchin-fallback-scan-qr').hide();
+    $('.card-help-block img').hide();
+    $('#confirm-phone-idp').removeAttr('disabled');
+    $('#confirm-phone-idp').removeClass('button-loading');
+    $('#confirm-phone-azap').removeAttr('disabled');
+    $('#confirm-phone-azap').removeClass('button-loading');
+    $('.idp-phone-block').hide();
+    $('.payment-list-block').hide();
+    $('.transaction-list-block').hide();
+    $('.amount_section').show();
+    $('#payment_amount').val('');
+    $('#ticket_short_desc').val('');
+    $('#ticket_email').val('');
+    AmountKeypad.setValue('');
+    IdpPhoneKeypad.setValue('');
+    UserPinKeypad.setValue('');
+    tchin_first_step_trial = 0;
+    tchin_second_step_trial = 0;
+    pin_counter = 0;
+    $('.link-select-currency .item-after').text($('#smart-select-currency').val());
+    $('.row').removeClass('hide-row');
+    $('.remarks-list').show();
+    $('.qr-remote-payment-img').attr('src','');
+    $('.block-qr-remote-payment').addClass('not-activated');
+    if(window.fidelityToast)
+    {
+      window.fidelityToast.close();
+      delete window.fidelityToast;
+    }
+    resetQPOS();
+  }
+  function sendReceipt(value,order,type){
+    app.dialog.preloader('Processing', 'color-green');
+    var formData = new FormData();
+    if(type === 'sms')
+    {
+    formData.append('ref', 'send_sms_receipt');
+      formData.append('n', value);
+    }
+    else
+    {
+      formData.append('ref', 'send_email_receipt');
+      formData.append('e', value);
+    }
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', order);
+    formData.append('op_id', $('#op_id').val());
+    formData.append('r_pwd', $('#r_pwd').val());
+    formData.append('creator_email', $('#creator_email').val());
+    formData.append('mn', $('#mn').val());
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        app.dialog.close();
+        console.log(data);
+        //alert(data);
+        //var jsonData = JSON.parse(data);
+        //alert(jsonData.result);
+        if(data.result === 'success')
+        {
+          if(type === 'sms')
+          {
+          app.dialog.alert('SMS sent','Success',function (){
+            resetForm();
+          });
+        }
+          else
+          {
+            app.dialog.alert('Email sent','Success',function (){
+              resetForm();
+            });
+          }
+        }
+        else
+        {
+          app.dialog.alert('An error has occurred','Error',function (){
+            resetForm();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }
+  function sendOTP(number,order,uid=null){
+    console.log('send otp: '+ number + order);
+    var formData = new FormData();
+    formData.append('ref', 'send_otp');
+    formData.append('n', number);
+    // formData.append('m', $('#m').val());
+    formData.append('mn', $('#mn').val());
+    // formData.append('s', $('#s').val());
+    // formData.append('c', $('#c').val());
+    // formData.append('f', $('#f').val());
+    formData.append('o', order);
+    formData.append('amount', $('#payment_amount').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    // pass device id
+    var device_id=$('#device_id').val();
+    formData.append('device_id', device_id);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        app.dialog.close();
+        console.log(data);
+        if(data.result === 'success')
+        {
+          /*app.dialog.prompt('Enter OTP received by SMS', function (otp){
+            if(otp === data.otp)
+            {
+              app.dialog.preloader('Processing', 'default');
+              if(uid !== null)
+              {
+                processSmartPayment(uid,'nfc',number);
+              }
+              else
+              {
+                processSmartPayment(number,'phone');
+              }
+            }
+            else
+            {
+              app.dialog.alert('Invalid OTP','Error',function (){
+                resetForm();
+              });
+            }
+          },
+          function (){
+            resetForm();
+          });*/
+          var dialogOtp = app.dialog.create({
+            text: 'Enter OTP received by SMS',
+            content: '<div class="dialog-input-field item-input"><div class="item-input-wrap"><input class="dialog-input dialog-input-otp" type="number"></div></div>',
+            buttons: [
+              {
+                text: 'Cancel', onClick: function () {
+                  console.log('close dialog');
+                  dialogOtp.close();
+                  resetForm();
+                }
+              },
+              {
+                text: 'OK', onClick: function (dialog) {
+                  console.log('ok ');
+                  var otp = dialog.$el.find('.dialog-input').val();
+                  if(otp !== '')
+                  {
+                    if(otp === data.otp)
+                    {
+                      clearInterval(window.check_IntervalOTP);
+                      app.dialog.preloader('Processing', 'default');
+                      if(uid !== null)
+                      {
+                        processSmartPayment(uid,'nfc',number);
+                      }
+                      else
+                      {
+                        processSmartPayment(number,'phone');
+                      }
+                    }
+                    else
+                    {
+                      app.dialog.alert('Invalid OTP','Error',function (){
+                        resetForm();
+                      });
+                    }
+                  }
+                  else
+                  {
+                    app.dialog.alert('Invalid OTP','Error',function (){
+                      resetForm();
+                    });
+                  }
+                }
+              }
+            ],
+            on: {
+              open: function () {
+                console.log("OPEN");
+                $('.dialog-input-otp').focus();
+                  window.check_IntervalOTP = setInterval(check_OTP_confirmed, 2000,number,order,uid);
+              }
+            },
+            destroyOnClose: true
+          }).open();
+        }
+        else
+        {
+          app.dialog.alert('An error has occurred','Error',function (){
+            resetForm();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.close();
+        console.log(data);
+        console.log(errorThrown);
+        app.dialog.alert('An error has occurred',function (){
+          resetForm();
+        });
+      },
+      statusCode: {
+        404: function (xhr) {
+          app.dialog.close();
+          app.dialog.alert('Page not found',function (){
+            resetForm();
+          });
+        }
+      }
+    });
+  }
+  function UARTautoDetect(){
+    openUart();
+  }
+  function checkAmount(){
+    var amount = $('#amount_to_pay').val();
+    var decimal_amount = amount.split(".")[1];
+    if(!amount)
+    {
+      app.dialog.alert('Enter amount','Error', function (){
+        AmountKeypad.open();
+      });
+    }
+    else if(amount < 1)
+    {
+      app.dialog.alert('Minimum amount is 1','Error',function (){
+        AmountKeypad.open();
+      });
+    }
+    else
+    {
+      if(decimal_amount)
+      {
+        if(decimal_amount.length > 2)
+        {
+          app.dialog.alert('Invalid amount','Error',function (){
+            AmountKeypad.open();
+          });
+        }
+        else
+        {
+          $('#amount_to_pay').attr('disabled',true);
+          $('#payment_amount').val(Math.round(parseFloat(amount)*100));
+          return true;
+        }
+      }
+      else
+      {
+        $('#amount_to_pay').attr('disabled',true);
+        $('#payment_amount').val(Math.round(parseFloat(amount)*100));
+        return true;
+      }
+    }
+  }
+  function loginUserDemo(){
+    app.dialog.preloader('Signing in', 'default');
+    var loginDialog = app.dialog.create({
+      el: '.dialog',
+    });
+    setTimeout(function () {
+      $('#login-btn').removeAttr('disabled');
+      $('#select-user').removeAttr('disabled');
+      $('#user-pin').removeAttr('disabled');
+      $('#login-btn').removeClass('button-loading');
+      //app.dialog.setText('Successful. Redirecting...');
+      //app.dialog.setTitle('Successful. Redirecting...');
+      loginDialog.setTitle('Successful<br>Please wait');
+    }, 5000);
+    setTimeout(function () {
+      loginDialog.close();
+      app.loginScreen.close('#my-login-screen');
+    }, 5000);
+  }
+  function listUserSOF(){
+    app.dialog.close();
+    //userSOFsheet.open();
+    app.sheet.open('.user-sof-sheet');
+  }
+  function displayGeneralSuccessMSG(){
+     var dialogPaymentSuccess = app.dialog.create({
+      content: '<div class="block no-hairlines no-margin no-padding"><div class="text-align-center"><div class="payment-success-icon"><i class="f7-icons">checkmark_alt_circle</i></div><div class="payment-success-text">Payment Success</div></div></div>',
+      buttons: [
+        {
+          text: 'OK', onClick: function () {
+            dialogPaymentSuccess.close();
+            resetForm();
+            if($('#is_till_integration').val() == 1){
+              checknewtransaction();
+            }
+          }
+        }
+      ],
+      destroyOnClose: true
+    }).open();
+  }
+  function displayGeneralFailMSG(msg = null){
+    if(msg != null)
+    {
+      var reason_text = '<div class="payment-fail-reason">'+msg+'</div>';
+    }
+    else
+    {
+      var reason_text = '';
+    }
+     var dialogPaymentFail = app.dialog.create({
+      content: '<div class="block no-hairlines no-margin no-padding"><div class="text-align-center"><div class="payment-fail-icon"><i class="f7-icons">multiply_circle</i></div><div class="payment-fail-text">Payment Fail</div>'+reason_text+'</div></div>',
+      buttons: [
+        {
+          text: 'OK', onClick: function () {
+            dialogPaymentFail.close();
+            resetForm();
+          }
+        }
+      ],
+      destroyOnClose: true
+    }).open();
+  }
+  //JM for SMS listener
+  function smslisten() {
+        if(SMS) SMS.startWatch(function(){
+            console.log('watching started');
+    }, function () {
+            console.log('failed to start watching');
+    });
+  }
+  function stop_smslisten() {
+        if(SMS) SMS.stopWatch(function(){
+            console.log('watching stopped');
+    }, function() {
+            console.log('failed to stop watching');
+    });
+  }
+  function reviewSms(sms){
+      text = sms.body;
+      console.log(text);
+     let qr_check_amount = $('#qr_check_amount').val();
+      //qr_check_amount = parseFloat(qr_check_amount).toFixed(2)*100
+          console.log(qr_check_amount);
+     let qr_check_order  = $('#qr_check_order').val();
+     console.log(qr_check_amount);
+     console.log(qr_check_order);
+      let qr_provider= $('#qr_check_provider').val();
+      switch(qr_provider) {
+          case 'JUICE':
+              // remove &  << FOR TEST ONLY
+             var match_sms =  text.match(/^You have received Rs\s?([0-9]*\.?[0-9]*)+\s+relating to a [a-zA-Z]+ Payment\s+.*\s* text\s+(.*)\.+\s+.*/);
+              if(!!match_sms&& !!match_sms[1] &&match_sms[2]){
+                  console.log('sms format validated');
+                  console.log(match_sms[1])
+                  let sms_amount =(parseFloat(match_sms[1].replace(",","").replace(" ",""))*100).toFixed(0); //in cents
+                  let sms_order_ref = match_sms[2];
+                  console.log('sms amount: '+sms_amount);
+                  console.log('sms order ref: '+sms_order_ref);
+                  if(qr_check_amount == sms_amount  && qr_check_order == sms_order_ref)
+                  {
+                    console.log('matching values')
+                    // >>>>>>> NOTIFY  MIPS  THAT QR CODE PAYMENT IS SUCCESSFUL    <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                    update_payment_qr(qr_check_order, qr_check_amount);
+                    stop_smslisten();
+                    //app.sheet.close('.merchant-qr-sheet');
+                    //document.getElementById('audio-payment-success').play();
+                    /*app.dialog.alert('Payment Successful','Success',function (){
+                      resetForm();
+                    });*/
+                    //displayGeneralSuccessMSG();
+                      //SET SMS READ *****
+                  }
+              }
+              break;
+      }
+  }
+  function check_OTP_confirmed(number,order,uid=null){
+    console.log(number, order, uid);
+    handle = window.check_IntervalOTP;
+    var formData = new FormData();
+    formData.append('ref', 'verify_ps_otp');
+    device_id =$('#device_id').val();
+    formData.append('o', $('#o').val());
+    formData.append('device_id', device_id);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data) {
+        console.log(data);
+        if(data.result === 'confirmed')
+        {
+          clearInterval(handle);
+          app.dialog.close();
+          app.dialog.preloader('OTP Confirmed Processing Payment', 'default');
+          if(uid !== null)
+          {
+            console.log('process_smart');
+            processSmartPayment(uid,'nfc',number);
+          }
+          else
+          {
+            processSmartPayment(number,'phone');
+            console.log('process_smart 2');
+          }
+        }
+        else{
+          //continue
+        }
+      },
+      error: function (data, errorThrown){
+      }
+    });
+  }
+  function verify_user(){
+        console.log('verify user pin code')
+    //get users for the device /form
+    //users for the form
+    var pos_device_id = $('#device_id').val();
+    var user_id= $('#select-user').val();
+    var pincode= $('#user-pin').val();
+    var params = {};
+    params.operation='verify_user_pincode';
+    params.device_id=  pos_device_id;
+    params.user_id=  user_id;
+    params.pincode=  pincode;
+    var formData = new FormData();
+    formData.append('posted_data', JSON.stringify(params));
+        var rslt;
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'ps_device_api/ps_device_api.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        console.log(data);
+                rslt = data.result;
+        if(data.result === 'LOGIN_SUCCESS')
+        {
+                    //loginUserDemo();
+          //store information in db
+                    storeParams(data);
+                    init_SMS_action();
+                    UserPinKeypad.close();
+                  console.log($('#is_till_integration').val());
+                  if($('#is_till_integration').val() == 1){
+                    checknewtransaction();
+                  }
+                  if($('#is_printer_on').val() == 1) {
+                    $('#btpPrinter-block').removeClass('not-activated');
+                    setTimeout(function () {
+                      getPrinter();
+                    }, 5000);
+                  }
+        }
+        else
+        {
+          $('#login-btn').removeAttr('disabled');
+          $('#select-user').removeAttr('disabled');
+          $('#user-pin').removeAttr('disabled');
+          $('#login-btn').removeClass('button-loading');
+          UserPinKeypad.setValue('');
+          app.dialog.alert('Incorrect PIN','Error', function (){
+            UserPinKeypad.open();
+          });
+        }
+      },
+      error: function (data, errorThrown){
+        //
+      },
+      statusCode: {
+        404: function (xhr) {
+          //
+        }
+      }
+    });
+        return rslt;
+  }
+  function loadUsers(){
+    console.log('load')
+    //get users for the device /form
+    //users for the form
+    var true_pos_device_id =  $('#device_id').val();
+    console.log('true_device_id: ' + true_pos_device_id);
+    var pos_device_id = $('#device_id').val();
+    var params = {};
+    params.operation='list_device_users';
+    params.device_id=  pos_device_id;
+    var formData = new FormData();
+    formData.append('posted_data', JSON.stringify(params));
+        let last_user_id='--';
+        get_user('user_id').then(function(rslt){
+            if(typeof rslt === 'object' && rslt !== null)
+            {
+                if(rslt.hasOwnProperty('user_id')) {
+                    last_user_id = rslt.user_id;
+                    console.log('last_user_id ' + last_user_id)
+                }
+            }
+        });
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'ps_device_api/ps_device_api.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data)
+      {
+        console.log(data)
+        if(data.result === 'PS_DEVICE_RECOGNIZED')
+        {
+          $('#select-user').find('option:nth-child(n + 2)').remove();
+          // success
+          console.log('PS_DEVICE_RECOGNIZED');
+          form_info = data.form;
+          users_info= data.users;
+          users_info.forEach(function(user){
+            let selected ='';
+            if(last_user_id === user.id_user)
+            {
+                selected = ' selected ';
+            }
+            new_option = '<option value="'+user.id_user+'"'+selected+'>'+user.nom_user+'</option>';
+            $('#select-user').append(new_option);
+          });
+          app.dialog.close();
+        }
+        else if(data.result === 'PS_DEVICE_CONNECT_FAILED')
+        {
+          app.dialog.close();
+          app.dialog.alert('Device is not recognised','Error');
+          app.toast.show({text:'Device is not recognised',position:'bottom'});
+        }
+        else
+        {
+          app.dialog.close();
+          app.dialog.alert('An error has occured','Error');
+          app.toast.show({text:'Device is not recognised',position:'bottom'});
+        }
+      },
+      error: function (data, errorThrown){
+        app.dialog.alert('An error has occured','Error');
+      },
+      statusCode: {
+        404: function (xhr) {
+          //
+        }
+      }
+    });
+  }
+  function QrScanner() {
+    cordova.plugins.barcodeScanner.scan(
+      function (result) {
+        if (!result.cancelled) {
+          console.log(result);
+          /*if (result.format == "QR_CODE") {
+            console.log(result);
+            var value = result.text;
+            console.log(value);
+          }*/
+        }
+      },
+      function (error) {
+        alert("Scanning failed: " + error);
+      }
+    );
+  }
+  function getPrinter(){
+    document.addEventListener('deviceready', function () {
+      new Promise(function (resolve) {
+        bluetoothle.initialize(resolve, { request: true, statusReceiver: false });
+      }).then(initializeSuccess, handleError);
+    });
+  }
+  //loginScreen
+  $('.login-screen').on('loginscreen:open', function (e) {
+    console.log('Login screen open');
+    loadUsers();
+  });
+  //app.loginScreen.open('#my-login-screen');
+  var db = null;
+  function initDatabase() {
+    console.log('init database');
+    db = window.sqlitePlugin.openDatabase({
+      name: 'mips_ps_v1.0.6.db',
+      location: 'default',
+    });
+    //create table
+    db.transaction(function(tx) {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS config_tbl (update_time, merchant_name, short_id_merchant, hash_salt, operator_id, remote_user_password, private_cipher_key)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS log_tbl (log_time, user_id, user_name, user_email)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS form_tbl (id_form, short_id_form, form_name, form_nickname,amount_trigger_otp,is_ots_form, form_currencies, form_sof_proc)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS form_currency_tbl (short_id_form, id_currency, symbole_monnaie, is_default_currency)');
+      tx.executeSql('CREATE TABLE IF NOT EXISTS form_sof_proc_tbl (short_id_form, id_sof, sof_name, sof_nickname, sof_proc_nickname, smart_payment_options)');
+    }, function(error) {
+      console.log('Transaction ERROR: ' + error.message);
+    }, function() {
+      console.log('tables init - OK');
+    });
+    //table for emv update status
+    db.transaction(function(tx) {
+      tx.executeSql('CREATE TABLE IF NOT EXISTS emv_update_tbl (emv_updated)');
+    }, function(error) {
+      console.log('Transaction ERROR: ' + error.message);
+    }, function() {
+      db.transaction(function(tx_count) {
+        tx_count.executeSql('SELECT count(*) AS emv_count FROM emv_update_tbl', [], function(tx_count, rs) {
+          emv_count = rs.rows.item(0).emv_count;
+          console.log('emv_status_cont : '+emv_count);
+          if (emv_count == 0)
+          {
+            db.transaction(function(tx_add_emv_row) {
+              tx_add_emv_row.executeSql('INSERT INTO emv_update_tbl (emv_updated) VALUES (?)', ["0"], function() {
+                console.log('insert emv: ');
+                // function to update EMV HERE <<<<
+                console.log('do emv config 1st time');
+                updateEMVConfigureByXml();
+              }, function(tx_add_emv_row,error) {
+                console.log(error);
+              });
+            });
+          }
+          else{
+            get_emv_update_status().then(function(status){
+              console.log(status);
+              console.log('emv status: '+status);
+              if(status == 0)
+              {
+                console.log('do emv config 2');
+                updateEMVConfigureByXml();
+              }
+              else
+              {
+                console.log('skip emv config');
+                viewQposId();
+              }
+            });
+          }
+        }, function(tx_count, error) {
+          console.log('SELECT  emv_count error: ' + error.message);
+        });
+      });
+      console.log('tables emv init - OK');
+    });
+  }//initDatabase
+  function storeParams(data){
+    console.log(data);
+    app.dialog.preloader('Signing in', 'default');
+    /*var loginDialog = app.dialog.create({
+      el: '.dialog',
+    });*/
+    //log time
+    var log_time = data.serve_time;
+    //user details
+    let user_data = data.user_data;
+    let user_id = user_data.id_user;
+    let user_name = user_data.nom_user;
+    let user_email = user_data.email_user;
+    $('#nav-mips-user-name').text(user_name);
+    //merchant data
+    //config update
+    let update_time = data.serve_time;
+    let merchant_data = data.merchant_data;
+    //
+    console.log(merchant_data);
+    //console.log(JSON.parse(merchant_data));
+    //main form details
+    let form_data = data.form_data;
+    if(form_data.qr_payment_active == "1") {
+      $('.block-qr-pay').removeClass('not-activated');
+      $('#scan-qr-btn').removeClass('not-activated');
+      $('#text-info-tchin').html('Please ensure NFC is active<br>Or choose Scan to Pay');
+    }
+    $('#amount_trigger_otp').val(Math.round(parseFloat(form_data.amount_trigger_otp)*100));
+    $('#f').val(form_data.short_id_form);
+    $('#is_till_integration').val(form_data.is_till_integration_on);
+    $('#is_printer_on').val(form_data.is_printer_on);
+    $('#is_fidelity_on').val(form_data.is_loyalty_on);
+    // $('#is_minit_ill_on').val(form_data.is_minitill_on);
+    // $('#default_printer_mac').val();
+    // $('#allow_refund').val();
+    // $('#allow_void').val();
+    // $('#allow_till_refund').val();
+    // $('#allow_card_refund').val();
+    // $('#allow_qr_pay_refund').val();
+    // $('#allow_till_void').val();
+    /*Remote payment associated quickpay form*/
+    if(data.associated_forms.length > 0) {
+      console.log('associated_forms -> ' + data.associated_forms[0].qp_form_details.short_id_form);
+      $('#qp_form').val(data.associated_forms[0].qp_form_details.short_id_form);
+    }
+    else{
+      console.log('no associated_forms ');
+      $('.rp-menu').addClass('not-activated');
+    }
+    $('#m').val(merchant_data.short_id_merchant);
+    $('#mn').val(merchant_data.merchant_name);
+    $('#nav-mips-merchant-name').text(merchant_data.merchant_name);
+    $('#s').val(merchant_data.hash_salt);
+    $('#c').val(merchant_data.private_cipher_key);
+    $('#op_id').val(merchant_data.operator_id);
+    $('#r_pwd').val(merchant_data.remote_user_password);
+    $('#creator_id').val(user_id);
+    $('#creator_email').val(user_email);
+    $('#connected_user_name').val(user_name);
+    //if(form_data.is_printer_on == "1") {
+    $('#is_printer_on').val(form_data.is_printer_on);
+    // To update eventually when having remote payment $('#qp_form').val(data.associated_forms[0].qp_form_details.short_id_form);
+    //form_currency_details
+    let main_frm_curr = form_data.currencies;
+    delete(form_data.currencies);
+    //update ots currencies
+    populate_ots_currencies(main_frm_curr);
+    //sof and proc details
+    var main_frm_sof_proc = form_data.sof_and_proc;
+    delete(form_data.sof_and_proc);
+    populate_ots_sof(main_frm_sof_proc);
+    var login_count;
+    //NOT USED NOW
+    // db.transaction(function(tx_count) {
+    //   tx_count.executeSql('SELECT count(*) AS login_count FROM log_tbl', [], function(tx_count, rs) {
+    //     login_count = rs.rows.item(0).login_count;
+    //     console.log('login count : '+login_count);
+    //   }, function(tx_count, error) {
+    //     console.log('SELECT  log count error: ' + error.message);
+    //   });
+    // });
+    // Clear information
+    // if (login_count > 0) {
+    db.transaction(function(tx_clear) {
+      tx_clear.executeSql('DELETE  FROM log_tbl', [], function () {
+        console.log('delete ok: ');
+      }, function (tx_clear, rs) {
+        console.log('delete error: ' + error.message);
+      });
+    });
+    ///////////\DELETE config
+    db.transaction(function(tx_clear_conf) {
+      tx_clear_conf.executeSql('DELETE FROM config_tbl', [], function (tx_clear_conf) {
+        console.log('clear ok: ');
+      }, function (tx_clear_conf, error) {
+        console.log('clear error: ' + error.message);
+      });
+    });
+    //clear forms
+    db.transaction(function(tx_clear_forms) {
+      tx_clear_forms.executeSql('DELETE FROM form_tbl', [], function () {
+        console.log('clear form ok: ');
+      }, function (tx_clear_forms, error) {
+        console.log('clear error: ' + error.message);
+      });
+    });
+    //clear forms-currencies
+    db.transaction(function(tx_clear_forms_curr) {
+      tx_clear_forms_curr.executeSql('DELETE FROM form_currency_tbl', [], function () {
+        console.log('clear ok: ');
+      }, function (tx_clear_forms_curr, error) {
+        console.log('clear error: ' + error.message);
+      });
+    });
+    //clear forms-sof-procs
+    db.transaction(function(tx_clear_forms_sof_proc) {
+      tx_clear_forms_sof_proc.executeSql('DELETE FROM form_sof_proc_tbl', [], function () {
+        console.log('clear ok: ');
+      }, function (tx_clear_forms_sof_proc, error) {
+        console.log('clear error: ' + error.message);
+      });
+    });
+    db.transaction(function(tx_form_log_add){
+      let query = 'INSERT INTO  log_tbl (log_time, user_id, user_name, user_email) VALUES (?,?,?,?)';
+      tx_form_log_add.executeSql(query, [log_time, user_id, user_name, user_email], function(tx_form_log_add, error) {
+        console.log('insert log ok: ');
+      }, function(tx_form_log_add, error) {
+        console.log('insert log error: ' + error.message);
+      });
+    });
+    //insert into config tble * to set conditions <<<<<<<<<<<
+    db.transaction(function(tx_config_add) {
+      tx_config_add.executeSql('INSERT INTO config_tbl (update_time, merchant_name, short_id_merchant, hash_salt, operator_id, remote_user_password,private_cipher_key) VALUES (?,?,?,?,?,?,?)', [update_time, merchant_data.merchant_name , merchant_data.short_id_merchant, merchant_data.hash_salt, merchant_data.operator_id, merchant_data.remote_user_password, merchant_data.private_cipher_key], function() {
+        console.log('insert  config ok: ');
+      }, function(tx_config_add,error) {
+        console.log('insert error: ' + error.message);
+      });
+    });
+    //insert form
+    db.transaction(function(tx_form_add) {
+      console.log(form_data)
+      tx_form_add.executeSql('INSERT INTO form_tbl (id_form, short_id_form, form_name, form_nickname, amount_trigger_otp, is_ots_form, form_currencies, form_sof_proc) VALUES (?,?,?,?,?,?,?,?)', [form_data.id_form, form_data.short_id_form, form_data.form_name, form_data.form_nickname, form_data.amount_trigger_otp, 1, JSON.stringify(main_frm_curr), JSON.stringify(main_frm_sof_proc)], function() {
+        console.log('insert form ok: ');
+      }, function(tx_form_add,error) {
+        console.log('insert form error: ' + error.message);
+      });
+    });
+    //main form currencies
+    // db.transaction(function(tx_form_curr_add) {
+    //   tx_form_curr_add.executeSql('INSERT INTO  form_tbl (id_form, short_id_form, form_name, form_nickname, amount_trigger_otp, is_ots_form) VALUES (?,?,?,?,?,?)', [form_data.id_form, form_data.form_name, form_data.form_nickname, form_data.amount_trigger_otp, 1 ], function(tx_form_curr_add, error) {
+    //     console.log('insert form error: ' + error.message);
+    //   }, function() {
+    //     console.log('insert form ok: ');
+    //   });
+    // });
+    db.transaction(function(tx_form_curr_add){
+      let query = 'INSERT INTO  form_currency_tbl (short_id_form, id_currency, symbole_monnaie, is_default_currency) VALUES (?,?,?,?)';
+      main_frm_curr.forEach(function (form_currency) {
+        console.log (form_data.id_form, form_currency.id_currency, form_currency.symbole_monnaie, form_currency.is_default_currency);
+        tx_form_curr_add.executeSql(query, [form_data.short_id_form, form_currency.id_currency, form_currency.symbole_monnaie, form_currency.is_default_currency], function() {
+          console.log('insert form currency ok: ');
+        }, function(tx_form_curr_add, error) {
+          console.log('insert form currency error: ' + error.message);
+        });
+      });
+    });
+    //form sof proc
+    db.transaction(function(tx_form_sof_proc_add){
+      let query = 'INSERT INTO  form_sof_proc_tbl (short_id_form, id_sof, sof_name, sof_nickname,sof_proc_nickname, smart_payment_options) VALUES (?,?,?,?,?,?)';
+      main_frm_sof_proc.forEach(function (sof_and_proc) {
+        console.log (form_data.id_form, currency.id_currency, currency.symbole_monnaie, currency.is_default_currency);
+        tx_form_sof_proc_add.executeSql(query, [form_data.short_id_form, sof_and_proc.id_sof, sof_and_proc.sof_name, sof_and_proc.sof_nickname, sof_and_proc.sof_proc_nickname, sof_and_proc.smart_payment_options ], function() {
+          console.log('insert form sof_proc ok: ');
+        }, function(tx_form_sof_proc_add, error) {
+          console.log('insert form sof_proc error: ' + error.message);
+          return true;
+        });
+      });
+    });
+    //associated forms inserts
+    data.associated_forms.forEach(function (assoc_form_data)
+    { //form_currency_details
+      let assoc_frm_curr = assoc_form_data.qp_form_currencies;
+      delete(assoc_form_data.currencies);
+      //sof and proc details
+      var assoc_frm_sof_proc = assoc_form_data.qp_form_sof_and_proc;
+      delete(assoc_form_data.sof_and_proc);
+      console.log('associated_form ');
+      console.log(assoc_form_data);
+      let qp_form_details = assoc_form_data.qp_form_details;
+      //insert form
+      db.transaction(function(tx_form_add_qp) {
+        console.log(form_data)
+        tx_form_add_qp.executeSql('INSERT INTO form_tbl (id_form, short_id_form, form_name, form_nickname, amount_trigger_otp, is_ots_form, form_currencies, form_sof_proc) VALUES (?,?,?,?,?,?,?,?)', [qp_form_details.id_form, qp_form_details.short_id_form, qp_form_details.form_name, qp_form_details.form_nickname, qp_form_details.amount_trigger_otp, 0, JSON.stringify(assoc_frm_curr), JSON.stringify(assoc_frm_sof_proc)], function() {
+          console.log('insert form ok: ');
+        }, function(tx_form_add_qp,error) {
+          console.log('insert form error: ' + error.message);
+        });
+      });
+      db.transaction(function(tx_form_curr_add_qp){
+        let query = 'INSERT INTO  form_currency_tbl (short_id_form, id_currency, symbole_monnaie, is_default_currency) VALUES (?,?,?,?)';
+        assoc_frm_curr.forEach(function (form_currency) {
+          console.log (form_data.id_form, form_currency.id_currency, form_currency.symbole_monnaie, form_currency.is_default_currency);
+          tx_form_curr_add_qp.executeSql(query, [assoc_frm_curr.short_id_form, form_currency.id_currency, form_currency.symbole_monnaie, form_currency.is_default_currency], function() {
+            console.log('insert form currency ok: ');
+          }, function(tx_form_curr_add_qp, error) {
+            console.log('insert form currency error: ' + error.message);
+          });
+        });
+      });
+      //form sof proc
+      db.transaction(function(tx_form_sof_proc_add_qp){
+        let query = 'INSERT INTO  form_sof_proc_tbl (short_id_form, id_sof, sof_name, sof_nickname,sof_proc_nickname, smart_payment_options) VALUES (?,?,?,?,?,?)';
+        assoc_frm_sof_proc.forEach(function (sof_and_proc) {
+          tx_form_sof_proc_add_qp.executeSql(query, [assoc_form_data.short_id_form, sof_and_proc.id_sof, sof_and_proc.sof_name, sof_and_proc.sof_nickname, sof_and_proc.sof_proc_nickname, sof_and_proc.smart_payment_options ], function() {
+            console.log('insert form sof_proc ok: ');
+          }, function(tx_form_sof_proc_add_qp, error) {
+            console.log('insert form sof_proc error: ' + error.message);
+            return true;
+          });
+        });
+      });
+    });// >>>>>>>
+    setTimeout(function () {
+      $('#login-btn').removeAttr('disabled');
+      $('#select-user').removeAttr('disabled');
+      $('#user-pin').removeAttr('disabled');
+      $('#login-btn').removeClass('button-loading');
+      //loginDialog.close();
+      app.dialog.close();
+      app.loginScreen.close('#my-login-screen');
+    }, 2500);
+  }//~f
+  function get_form_info(short_id_form = null, paramX=null, to_string= false) {
+    let sql;
+    let form_info;
+    if (short_id_form === null) {
+      console.log('no form id passed');
+      if (paramX !== null) {
+        console.log('param not null 1');
+        if (!Array.isArray(paramX) || !paramX.length) {
+          sql = 'SELECT ' + paramX + ' FROM form_tbl WHERE is_ots_form = 1 LIMIT 1';
+        }
+        else{
+          let param_list = paramX.join(',')
+          sql = 'SELECT ' + param_list + ' FROM form_tbl WHERE is_ots_form = 1 LIMIT 1';
+        }
+      } else {
+        console.log('no param 1');
+        sql = 'SELECT * FROM form_tbl  WHERE is_ots_form = 1 LIMIT 1';
+      }
+      console.log(sql);
+      return new Promise(function (resolve, reject) {
+        db.executeSql(sql, [], function (rs) {
+          form_info = rs.rows.item(0);
+          if (paramX != null && to_string) {
+            console.log(paramX)
+            form_info = Object.values(form_info).join(',');
+          }
+          resolve(form_info);
+        }, function (error) {
+          console.log('SELECT error: ' + error.message);
+        });
+      }).then(function(reslt){
+        return reslt;
+      });
+    } else {
+      console.log('form id passed');
+      if (paramX !== null) {
+        console.log('param not null 2');
+        if (!Array.isArray(paramX) || !paramX.length) {
+          sql = 'SELECT ' + paramX + ' FROM form_tbl WHERE short_id_form = ? LIMIT 1';
+        }
+        else{
+          let param_list = paramX.join(',')
+          sql = 'SELECT ' + param_list + ' FROM form_tbl WHERE short_id_form = ? LIMIT 1';
+        }
+      } else {
+        console.log('no param 2');
+        sql = 'SELECT * FROM form_tbl WHERE short_id_form = ? LIMIT 1';
+      }
+      return new Promise(function (resolve, reject) {
+        db.executeSql(sql, [short_id_form], function (rs) {
+          form_info = rs.rows.item(0);
+          if (paramX != null && to_string) {
+            console.log(paramX)
+            form_info = Object.values(form_info).join(',');
+          }
+          resolve(form_info);
+        }, function (error) {
+          console.log('SELECT error: ' + error.message);
+        });
+      });
+      //return form_info;
+    }
+  } //get_form_info
+  //get_forms
+  function get_forms(all_fields = false) {
+    let sql;
+    let forms_id;
+    if(all_fields === true)
+    {
+      sql =  'SELECT short_id_form, is_ots_form FROM form_tbl';
+    }
+    else {
+      sql = 'SELECT short_id_form, is_ots_form FROM form_tbl';
+    }
+    return new Promise(function (resolve, reject) {
+      db.executeSql(sql, [], function (rs) {
+        let forms_info=[];
+        row_count = rs.rows.length;
+        if(row_count > 0)
+        {
+          for(let i=0; i < row_count; i++)
+          {
+            forms_info.push(rs.rows.item(i));
+          }
+        }
+        resolve(forms_info);
+      }, function (error) {
+        console.log('SELECT error: ' + error.message);
+      });
+    });
+    //return form_info;
+  }//get_forms
+  function get_form_currencies(short_id_form=null){
+    return new Promise(function (resolve, reject) {
+      let form_currencies_str;
+      get_form_info(short_id_form, 'form_currencies', true).then(function(r){form_currencies_str = r;
+        let form_currencies_arr = JSON.parse(form_currencies_str);
+        resolve(form_currencies_arr);
+      });
+    });
+  }
+  function get_form_sof_proc(short_id_form){
+    return new Promise(function (resolve, reject) {
+      let form_sof_proc_str;
+      get_form_info(short_id_form, 'form_sof_proc', true).then(function(r){form_sof_proc_str = r;
+        let form_sof_proc_arr = JSON.parse(form_sof_proc_str);
+        resolve(form_sof_proc_arr);
+      });
+    });
+  }
+  function get_merchant_config(param=null){
+    let sql;
+    if(param !== null)
+    {
+      sql = 'SELECT ' +param+' FROM config_tbl ORDER BY update_time DESC LIMIT 1';
+    }
+    else{
+      sql = 'SELECT merchant_name, short_id_merchant, hash_salt, operator_id, remote_user_password FROM config_tbl ORDER BY update_time DESC LIMIT 1';
+    }
+    return new Promise(function (resolve, reject) {
+      db.transaction(function(t_get_merchant) {
+        t_get_merchant.executeSql(sql, [], function (t_get_merchant,rs) {
+          rslt =  rs.rows.item(0);
+          resolve(rslt);
+        }, function (t_get_merchant, error) {
+          console.log('error on selec form info: ' + error.message);
+          return true;
+        });
+      });
+    });
+    return rslt;
+  }
+  function get_user(param=null){
+    let sql;
+    if(param !== null)
+    {
+      sql = 'SELECT ' +param+' FROM log_tbl ORDER BY log_time DESC LIMIT 1';
+    }
+    else{
+      sql = 'SELECT user_id, user_name, user_email FROM log_tbl ORDER BY log_time DESC LIMIT 1';
+    }
+    return new Promise(function (resolve, reject) {
+      db.transaction(function(t_get_user) {
+        t_get_user.executeSql(sql, [], function (t_get_user,rs) {
+          rslt =  rs.rows.item(0);
+          resolve(rslt);
+        }, function (t_get_user, error) {
+          console.log('error on selec form info: ' + error.message);
+          return true;
+        });
+      });
+    });
+    return rslt;
+  }
+  function clear_db(){;
+    db.transaction(function(tx) {
+      tx.executeSql('DELETE FROM log_tbl');
+      tx.executeSql('DELETE FROM config_tbl');
+      tx.executeSql('DELETE FROM form_tbl');
+      tx.executeSql('DELETE FROM form_currency_tbl');
+      tx.executeSql('DELETE FROM form_sof_proc_tbl');
+    }, function(error) {
+      console.log('Transaction ERROR: ' + error.message);
+    }, function() {
+      console.log('cleared tables OK');
+    });
+  }
+  function populate_ots_currencies(ots_form_currencies){
+    console.log('populate currencies');
+    let currencies= ots_form_currencies;
+    console.log(currencies.length);
+    currencies.forEach(function (currency) {
+      var option = '<option value="'+currency.symbole_monnaie+'"';
+      if(currency.is_default_currency == 1)
+      {
+        option += ' selected';
+        $('.link-select-currency .item-after').text(currency.symbole_monnaie);
+      }
+      option += '>'+currency.symbole_monnaie+'</option>';
+      $('#smart-select-currency').append(option);
+      //alert(currency.symbole_monnaie);
+    });
+  }
+  function populate_ots_sof(ots_form_sof_proc){
+    console.log('populate sof proc');
+    let sof_procs= ots_form_sof_proc;
+    console.log(sof_procs.length);
+    sof_procs.forEach(function (sof_proc) {
+      console.log(sof_proc);
+      if(sof_proc.id_sof == "10" || sof_proc.id_sof == "16" || sof_proc.id_sof == "18")
+      {
+        $('.block-sof-card').removeClass('not-activated');
+      }
+      if(sof_proc.id_sof == "22" && sof_proc.sof_proc_nickname == "POP")
+      {
+        $('.idp-block').removeClass('not-activated');
+        $('#confirm-phone-idp').removeClass('not-activated');
+        if(sof_proc.smart_payment_options == 'phone' || sof_proc.smart_payment_options == 'none')
+        {
+          $('#idp-phone-option-only').removeClass('not-activated');
+        }
+        else if(sof_proc.smart_payment_options == 'nfc')
+        {
+          $('#idp-tchin-option-only').removeClass('not-activated');
+        }
+        else if(sof_proc.smart_payment_options == 'both')
+        {
+          $('#idp-phone-option-only').removeClass('not-activated');
+          $('#idp-phone-option-only').removeClass('idp-phone-option-only');
+          $('#idp-tchin-option-only').removeClass('not-activated');
+          $('#idp-tchin-option-only').removeClass('idp-tchin-option-only');
+        }
+      }
+      if(sof_proc.id_sof == "21" && sof_proc.sof_proc_nickname == "Holdem")
+      {
+        $('.block-sof-azap').removeClass('not-activated');
+      }
+    });
+  }
+  function get_emv_update_status(){
+    let sql = 'SELECT emv_updated FROM emv_update_tbl Limit 1';
+    return new Promise(function (resolve, reject) {
+      db.transaction(function(tx) {
+        tx.executeSql(sql, [], function (tx,rs) {
+                    rslt =  rs.rows.item(0).emv_updated;
+          resolve(rslt);
+        }, function (tx, error) {
+          console.log('error on selec form info: ' + error.message);
+          return true;
+        });
+      });
+    });
+  }
+  function set_emv_update_status(){
+    let sql = 'UPDATE emv_update_tbl SET emv_updated = "1"';
+    db.transaction(function(tx_update_evm_status) {
+      tx_update_evm_status.executeSql(sql, [], function (tx_update_evm_status) {
+        console.log('update evm_status ok: ');
+      }, function (tx_update_evm_status, error) {
+        console.log('update evm_status error: ' + error.message);
+      });
+    });
+  }
+  function prep_qr( )
+  {
+        app.dialog.preloader('Loading, please wait', 'color-green');
+        let id_order = app.utils.id('xxxx-xxxx-xxxx-xxxx');
+        let amount = $('#payment_amount').val()
+      console.log(amount, id_order);
+      $('#qr_check_amount').val(amount);
+      if($('#qr_check_order').val() === ''){
+        $('#qr_check_order').val(id_order);
+      }
+      else
+      {
+        id_order = $('#qr_check_order').val();
+      }
+        console.log(amount, id_order);
+        $('.qr-pay-img').attr('src','');
+        var id_merchant = $('#m').val();
+        var id_form = $('#f').val();
+        var id_user = $('#creator_id').val();
+        var formData = new FormData();
+        formData.append('currency', 'MUR');
+        formData.append('amount', amount);
+        formData.append('id_order', id_order);
+        formData.append('m', id_merchant);
+        formData.append('f', id_form);
+        formData.append('id_user', id_user);
+        formData.append('is_for_till_id', $('#device_id').val());
+        formData.append('is_till_integration', $('#is_till_integration').val());
+        formData.append('remarks', $('#remarks').val());
+        formData.append('connected_user_name', $('#connected_user_name').val());
+        console.log('-----------------');
+        console.log(formData);
+        app.request({
+            crossDomain: true,
+            method: 'POST',
+            url: mymipsURL+'mips-app/generate-qrcode.php',
+            //url: 'https://my.mips.mu/mips-app/generate-qrcode.php',
+            data: formData,
+            dataType: 'json',
+            success: function(data)
+            {
+              document.getElementById('audio-scan-qr').play();
+              app.dialog.close();
+              console.log(data);
+              let qr_code_src = data.qrcode;
+              let provider    = data.provider;
+              $('#qr_merchant_name').html(data.merchant_name);
+              $('#qr_merchant_phone').html(data.merchant_phone);
+              $('#qr_check_provider').val(provider);
+                  switch(provider){
+                    case 'JUICE':
+                        // check order status by reading sms
+                        $('#qr_check_amount').val(amount);
+                        $('#qr_check_order').val(id_order);
+                        //smslisten();
+                            console.log('check_qr_order_status');
+                        check_qr_order_status(id_order,id_form);
+                    break;
+                    case 'POP':
+                        // function / ajax to check order status
+                        check_qr_order_status(id_order,id_form);
+                    break;
+                }
+                $('.qr-pay-img').attr('src',qr_code_src);
+                app.sheet.open('.merchant-qr-sheet');
+            },
+            error: function (data, errorThrown){
+                app.dialog.close();
+                console.log(data);
+                console.log(errorThrown);
+                app.dialog.alert('An error has occurred',function (){
+                    resetForm();
+                });
+            },
+            statusCode: {
+                404: function (xhr) {
+                    app.dialog.close();
+                    app.dialog.alert('Page not found',function (){
+                        resetForm();
+                    });
+                }
+            }
+        });
+  }
+  function checklogin(){
+    if($('#user-pin').val().length == 4){
+      verify_user();
+    }
+  }
+  /******************************/
+  /* Transactions        */
+  /* Remote Payments     */
+  /* Mini Till           */
+  /******************************/
+  /* Moved to transactions.js   */
+  /* Moved to remote-payment.js */
+  /* Moved to tills.js          */
+  /******************************/
+  $('#remote_payment_btn').on('click', function (e){
+    app.panel.close();
+  });
+  $('#mips-payment-link').on('click', function (e) {
+    app.panel.close();
+  });
+  $('.version').html('1.0.7'); //app.version
+  $('#remarks').on("keydown", function(event) {
+    console.log(event.keyCode);
+    if(event.keyCode === 13){
+      //$('#amount_to_pay').focus();
+      $(this).blur();
+    }
+  });
+  function testVideo(){
+    VideoPlayer.play(
+            "file:///android_asset/Nespresso_presents_A_cup_of_Sunshine.mp4",
+            {
+              volume: 0.5,
+              scalingMode: VideoPlayer.SCALING_MODE.SCALE_TO_FIT_WITH_CROPPING
+            },
+            function () {
+              console.log("video completed");
+            },
+            function (err) {
+              console.log(err);
+            }
+    );
+  }
+</script>
+</body>
+</html>

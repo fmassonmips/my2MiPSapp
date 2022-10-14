@@ -1,0 +1,148 @@
+<div class="page" data-name="transactions">
+    <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner sliding">
+            <div class="left">
+                <a href="#" class="link back">
+                    <i class="icon icon-back"></i>
+                    <span class="if-not-md">Back </span>
+                </a>
+            </div>
+            <div class="title">Transactions</div>
+        </div>
+    </div>
+    <div class="page-content" data-page="transactions">
+        <div class="block margin-top-half no-margin-bottom">
+            <div class="segmented segmented-raised">
+                <button class="button button-outline yesterday" onclick="yesterday()">Yesterday</button>
+                <button class="button button-outline button-active today" onclick="today_trans()">Today</button>
+            </div>
+        </div>
+        <div class="block margin-top-half margin-bottom-half">
+            <p class="row">
+                <button class="col button button-fill color-blue refresh-action-button" id="Refresh_transacations" onclick="sms_process('sync')">Refresh</button>
+                <button class="col button button-fill color-green printTransactionBtn-action-button not-activated" id="printTransactionBtn" onclick="printLogo();Print();">Print</button>
+                <button onclick="printLogo();" class="col button button-fill color-red not-activated">Logo</button>
+            </p>
+        </div>
+        <div class="block margin-top-half margin-bottom-half btpPrinter-block not-activated">
+            <select id="btpPrinter" class="btpPrinter" onchange="connectPrinter(this.value)"></select>
+            <button id="printersloaderBtn"  class="printersloaderBtn" onclick="loadPrinters()">Load Printers</button>
+            <input type="hidden" id="yesterday" value="0" />
+            <div id="status" class="status"></div>
+        </div>
+        <span class="trans_title" id="trans_title">Today's Transactions</span>
+        <div class="block margin-top-half margin-bottom-half not-activated">
+            <span class="table-head-label">Currency</span>
+            <div class="input input-dropdown">
+                <!-- <select id="currencyTransFilter" class="currencyTransFilter" onchange="getTransactions()">
+                    <option value="ALL">All</option>
+                    <option value="MUR" >MUR</option>
+                    <option value="EUR">EUR</option>
+                    <option value="USD" >USD</option>
+                </select> -->
+                <select id="mopTransFilter" class="mopTransFilter" onchange="getTransactions()">
+                    <option value="ALL">ALL</option>
+                    <option value="Amex">Amex</option>
+                    <option value="Blink">Blink</option>
+                    <option value="Juice">Juice</option>
+                    <option value="MyTMoney">MyTMoney</option>
+                    <option value="Mastercard">Mastercard</option>
+                    <option value="POP">Pop</option>
+                    <option value="POP/Blink">POP/Blink</option>
+                    <option value="Visa">Visa</option>
+                </select>
+            </div>
+        </div>
+        <div class="data-table card">
+            <table class="sum_table">
+                <thead><th>Status</th><th>Qty</th><th>Amount</th></thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+        <br/>
+
+
+        <span class="trans_title">Transaction Details</span>
+        <div class="data-table card">
+            <table class="transaction_list">
+                <thead>
+                <tr>
+                    <th class="input-cell">
+                        <span class="table-head-label">Date</span>
+                        <div class="input">
+                            <input type="text" placeholder="Filter" />
+                        </div>
+                    </th>
+                    <th class="input-cell">
+                        <span class="table-head-label">Currency</span>
+                        <div class="input input-dropdown">
+                            <select id="currencyTransactionFilter" class="currencyTransactionFilter" onchange="getTransactions()">
+                                <option value="ALL">All</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="MUR" selected>MUR</option>
+                                <option value="USD">USD</option>
+                                <option value="ZAR">ZAR</option>
+                            </select>
+                        </div>
+                    </th>
+                    <th class="input-cell">
+                        <span class="table-head-label">Amount</span>
+                        <div class="input">
+                            <input type="text" placeholder="Filter" />
+                        </div>
+                    </th>
+
+                    <th class="input-cell">
+                        <span class="table-head-label">Status</span>
+                        <div class="input input-dropdown">
+                            <select id="statusTransactionFilter" class="statusTransactionFilter" onchange="getTransactions()">
+                                <option value="ALL">All</option>
+                                <option value="SUCCESS" id="success_qty">Success</option>
+                                <option value="FAIL" id="failed_qty">Fail</option>
+                                <option value="CANCELLED" id="cancelled_qty">Cancelled</option>
+                            </select>
+                        </div>
+                    </th>
+                    <th class="input-cell">
+                        <span class="table-head-label">Remarks</span>
+                        <div class="input" style="width: 50px">
+                            <input type="text" placeholder="Filter" />
+                        </div>
+                    </th>
+                    <th class="input-cell">
+                        <span class="table-head-label">Trans.Ref</span>
+                        <div class="input" style="width: 50px">
+                            <input type="text" placeholder="Filter" />
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody id="transaction_row">
+
+                </tbody>
+            </table>
+        </div>
+        <div class="block block-strong mop">
+            Means of payment
+            <div class="card data-table">
+                <table class="meansofpaymentable">
+                    <tbody id="meansofpaymentable">
+
+
+                    </tbody>
+                </table>
+
+            </div>
+
+
+        </div>
+        <div class="block block-strong hide">
+            <div class="pie-chart pie-chart-2"></div>
+        </div>
+
+    </div>
+</div>

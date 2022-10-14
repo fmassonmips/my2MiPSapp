@@ -1,0 +1,82 @@
+<div class="page" data-name="till">
+    <div class="navbar">
+        <div class="navbar-bg"></div>
+        <div class="navbar-inner sliding">
+            <div class="left">
+                <a href="#" class="link back">
+                    <i class="icon icon-back"></i>
+                    <span class="if-not-md">Back</span>
+                </a>
+            </div>
+            <div class="title">My MiPS mini Till - POS</div>
+        </div>
+    </div>
+    <div class="page-content">
+
+        <!-- carousel category -->
+
+            <div class="row">
+                <div class="col-90 margin-bottom-half no-padding">
+                    <div class="swiper-container swipercategory">
+                        <div class="swiper-wrapper" id="swiper-wrapper">
+
+                        </div>
+                    </div>
+                </div>
+            
+            <div class="col-100 resizable">
+
+                <!-- Media list block has additional "media-list" class -->
+                <div class="list media-list">
+                    <input type="hidden" id="id_category" value="">
+                    <ul id="posProdList">
+
+                    </ul>
+                </div>
+                <div class="fab fab-extended fab-center-bottom color-red cart-floating-button">
+                    <a href="#">
+                        <i class="icon f7-icons if-not-md">plus</i>
+                        <i class="icon material-icons md-only">add</i>
+                        <div class="fab-text cart-floating-button-title">Cart</div>
+                    </a>
+                </div>
+
+            </div>
+            <div class="col-100">
+
+                <div class="list block-title cart-title">CART</div>
+                <div class="item-input-wrap">
+                <input type="text" id="qrcodefield" name="" value="" placeholder="SKU" class="qrcodeinput">
+                </div>
+                <!-- <a target="_blank" href="javascript:scan();" style="text-decoration: none"><button>Scan</button></a> -->
+                <ul class="poscart" id="poscart">
+
+                </ul>
+
+
+            </div>
+        </div>
+        <!-- Coupon code -->
+
+        <div class="block">
+            <div class="row margin-bottom">
+                <div class="col-100 medium-50 large-33 margin-h-auto">
+                    <h6>Total Amount <span class="float-right total_price">Rs 0.00</span></h6>
+                    <input id="totalcartprice" type="hidden" value="0.00">
+                </div>
+            </div>
+        </div>
+        <div class="block">
+            <div class="row margin-bottom">
+                <div class="col-100 medium-50 large-33 margin-h-auto">
+                    <!--<a href="/" onclick="$(this).href='/?amount='+parseFloat($('#totalcartprice').val()).toFixed(2);update_payment_amount();" class="button button-fill button-large button-round color-green"><i class="f7-icons icon">creaditcard</i>
+                        Proceed to Payment</a> -->
+                    <a href="#" class="link back button button-fill button-large button-round color-green"  onclick="update_payment_amount();">
+                        <i class="icon icon-back"></i> Proceed to Payment
+                        <span class="if-not-md">Proceed to Payment</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

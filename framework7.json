@@ -1,0 +1,31 @@
+{
+  "cwd": "C:\\projects\\my2MiPSapp",
+  "type": [
+    "cordova"
+  ],
+  "name": "my2MiPS",
+  "pkg": "global.mips.my2",
+  "framework": "core",
+  "template": "single-view",
+  "bundler": false,
+  "cordova": {
+    "folder": "cordova",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "cordova-plugin-statusbar",
+      "cordova-plugin-keyboard",
+      "cordova-plugin-splashscreen"
+    ]
+  },
+  "theming": {
+    "customColor": true,
+    "color": "#1982be",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false
+  },
+  "customBuild": false
+}

@@ -1,0 +1,240 @@
+/* iOS Cordova Tweak */
+.device-cordova.device-ios {
+  height: 100vh;
+}
+
+/* Your app custom styles here */
+
+/* Custom color theme */
+:root {
+  --f7-theme-color: #1982be;
+  --f7-theme-color-rgb: 25, 130, 190;
+  --f7-theme-color-shade: #14699a;
+  --f7-theme-color-tint: #1e9be1;
+  --f7-button-large-font-size: 17px;
+  --f7-typography-margin: 25px;
+}
+
+.color-resetbtn {
+  --f7-theme-color: #ff0000;
+  --f7-theme-color-rgb: 255, 0, 0;
+  --f7-theme-color-shade: #d60000;
+  --f7-theme-color-tint: #ff2929;
+}
+
+.currency-label-text {
+  padding-left: 8px;
+}
+
+.md .input-clear-button:after {
+  display:none;
+  content:'';
+}
+
+.custom-clear-text-icon {
+  font-size:20px;
+}
+
+.m-action-button[disabled=true] {
+  filter: grayscale(0.5);
+}
+
+.nav-mips-logo {
+  max-width: 40px;
+  padding: 0 12px;
+}
+
+.keypad .toolbar .link {
+  height: 40px;
+  margin-right: 4px;
+}
+
+.list .item-content.amount-input, .list .item-content.idp-phone-input {
+  padding-left:0;
+}
+
+.list .item-content.amount-input #amount_to_pay, .list .item-content.idp-phone-input #idp-phone-num{
+  text-align: center;
+  font-size: 30px;
+  background: #f0f0f0;
+  height: 48px;
+}
+
+.list .item-content.idp-phone-input #idp-phone-num {
+  font-size: 22px;
+  text-align:left;
+}
+
+.amount-input .badge {
+  padding: 10px;
+  border-radius: 3px;
+  background: #1982be;
+  text-decoration: underline;
+  width: 50px;
+}
+
+.md .item-input.amount-input .item-media {
+  align-self: flex-start;
+  min-width: auto;
+  flex-direction: column;
+}
+
+#confirm_amount {
+  /*height: 65.32px;*/
+}
+
+#confirm_amount .f7-icons {
+  margin-right:5px;
+}
+
+.idp-block .button.button-large {
+  /*height: 96px;*/
+}
+
+.idp-block .button.button-large#confirm-phone-idp {
+  height: 48px;
+}
+
+.idp-block .button .idp-type-logo {
+  max-width: 60px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.idp-block .button .span-sof-logo {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.idp-block .button .idp-sof-logo {
+  max-width: 26px;
+}
+
+.card-help-block {
+  background: #13d876;
+  text-align: center;
+  border-radius: var(--f7-button-border-radius);
+  display:none;
+  margin-bottom: -15px;
+}
+
+.card-help-block img{
+  display:none;
+  max-width: 200px;
+  padding: 15px;
+  margin: 0 auto;
+}
+
+.text-pin-code {
+  display: block;
+  text-align: center;
+  background-color: white;
+  padding: 15px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.idp-phone-block {
+  display:none;
+}
+
+.login-pin-block input {
+  width: 100%;
+  background: #747474;
+  text-align: center;
+  color: #fff;
+  padding: 15px;
+  height: 75px;
+  font-size: 30px;
+}
+
+.login-screen .list input[type=password], .login-screen .list select, .idp-phone-block .list input[type=text] {
+  font-size: 18px;
+  background: #f0f0f0;
+  height: 48px;
+  padding: 5px 5px 5px 15px;
+}
+
+.login-block .list .item-content {
+  padding-left:0;
+}
+
+.login-block .item-input .item-inner, .idp-phone-block .item-input .item-inner {
+  margin-left:0;
+  padding-right:0;
+}
+
+.idp-phone-block .item-input .item-inner {
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+.login-block .list .item-media, .idp-phone-block .list .item-media {
+  align-self: center;
+  background: #afafaf;
+  text-align: center;
+  display: block;
+  min-width: 50px;
+  height: 48px;
+}
+
+.login-block .list .item-media .f7-icons, .idp-phone-block .list .item-media .f7-icons {
+  color: #fff;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.nav-mips-user {
+  font-size: 11px;
+  text-align: right;
+}
+
+.nav-mips-user #nav-mips-merchant-name {
+  font-weight: 700;
+}
+
+.md .navbar a.icon-only.nav-mips-icon-user {
+  padding: 0 12px 0 6px;
+  width: 52px;
+}
+.nav-mips-icon-user i.icon {
+  font-size: 40px;
+}
+
+#phone-pop, #remote_payment_btn {
+  font-size: 12px;
+  line-height: 1;
+}
+
+#phone-pop .f7-icons, #remote_payment_btn .f7-icons {
+  font-size: 25px;
+  padding-right: 10px;
+}
+
+.tchin-block-border {
+  border: 2px #2882be solid;
+  border-radius: 5px;
+  padding: 25px 10px 10px;
+}
+
+.tchin-block-border #tchin-border-icon {
+  width: 100%;
+  max-width: 60px;
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translate(-50%);
+}
+
+.amount-input .badge img {
+  width: 100%;
+  max-width: 35px;
+}
+
+.version{
+	position: absolute;
+    bottom: 17px;
+    left: 100px;
+}

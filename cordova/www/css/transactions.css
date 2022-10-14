@@ -1,0 +1,140 @@
+.green{
+    background-color:#2cd048;
+    color:#ffffff;
+}
+.orange{
+    background-color:#ff6600;
+    color:#ffffff;
+}
+.red{
+    background-color:#ff0000;
+    color:#ffffff;
+}
+#transactions_qty_summary > table > tbody > tr > td,
+.transaction_list, .transaction_list tbody{
+    font-size:11px;
+}
+
+.sum_table tbody{
+    font-size:11px;
+}
+
+.sum_table td.amt, .transaction_list td.trans_datetime{
+    white-space: nowrap;
+}
+    /*Listing payment ticket: getPaymentTicket()*/
+.rp-item-after .green, .green, .trans_statusgreen{
+    background-color: #009b4d;
+    color:white;
+    text-transform: capitalize;
+    font-size: 10px;
+    border-radius: 10%;
+    /*padding-right: 2px;
+    padding-left: 2px;*/
+    height: fit-content;
+}
+
+.rp-item-after .orange, .orange, .trans_statusorange{
+    background-color:#ff6600;
+    color:white;
+    text-transform: uppercase;
+    font-size: 10px;
+    border-radius: 10%;
+    /*padding-right: 2px;
+    padding-left: 2px;*/
+    height: fit-content;
+}
+
+.rp-item-after .red, .red, .trans_statusred{
+    background-color:#ff0000;
+    color:white;
+    text-transform: capitalize;
+    font-size: 10px;
+    border-radius: 10%;
+    /*padding-right: 2px;
+    padding-left: 2px;*/
+    height: fit-content;
+}
+
+.rp-item-after .grey, .grey{
+    background-color:#9a9a9a;
+    color:white;
+    text-transform: capitalize;
+    font-size: 10px;
+    border-radius: 10%;
+    /*padding-right: 2px;
+    padding-left: 2px;*/
+    height: fit-content;
+}
+
+.trans_titre{
+    font-size: 10px;
+}
+
+.trans_amt,.ref_id{
+    font-size: 10px;
+}
+
+.rp-item-footer, .list .rp-item-header {
+    /*white-space: normal;*/
+}
+.data-table .input-cell .input input, .data-table .input-cell .input select, .data-table .input-cell .input textarea,
+.data-table thead td, .data-table thead th{
+    font-size: 9px;
+}
+.trans_btn_detail{
+    
+}
+.activereport{
+    font-weight: bold;
+    color:#1982be;
+}
+
+.inactivereport{
+    font-weight: normal;
+    color: #00228c;
+    text-decoration: underline;
+}
+
+.trans_title{
+    font-weight: bold;
+    color:#1982be;
+    display: block;
+    text-align: center;
+}
+
+.md {
+    --f7-table-cell-padding-horizontal: 10px;
+    --f7-table-edge-cell-padding-horizontal: 10px;
+}
+
+.trans_status span {
+    padding: 3px 5px !important;
+    height:auto !important;
+}
+
+.printerselection{
+    height:auto !important;
+    padding: 3px 5px !important;
+}
+.status, .printersloaderBtn{
+    /*padding: 3px 5px !important;
+    height:auto !important;
+    border:1px solid #ff0000;*/
+    display:none;
+}
+.btpPrinter,.currencyTransFilter,.mopTransFilter {
+    background-color: white;
+    border: thin solid blue;
+    border-radius: 4px;
+    display: inline-block;
+    font: inherit;
+    line-height: 1.5em;
+    padding: 0.5em 3.5em 0.5em 1em;
+    margin: 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
