@@ -33,6 +33,22 @@ function void_transaction(transaction_id, montant){
 
 }
 
+function refund_transaction(transaction_id, montant){
+    console.log('refund_transaction() ' + transaction_id);
+    $('#o').val(transaction_id);
+    $('#payment_amount').val(parseFloat(montant/100).toFixed(2));
+    $('#amount_to_pay').val(parseFloat(montant/100).toFixed(2));
+    $('.back').click();
+    $('.card-help-block #img-enter-card').show();
+    $('.card-help-block').show();
+    $('.m-action-button').hide();
+    $('.tchin-block-border').hide();
+    $('.idp-block').hide();
+    $('.remarks-list').hide();
+    doRefund();
+
+}
+
 function transactionDetail(reason){
     app.dialog.alert(reason,'Details');
 }
@@ -196,7 +212,7 @@ function getTransactions(yesterday=0){
 
                     '<td class="item-cell trans_titre trans_datetime"><b>' + trans_date_time[0] + '</b><br/>' + trans_date_time[1] + '</td>\n' +
                     '<td class="item-cell trans_cur">'+value.symbole_monnaie+'</td><td class="item-cell trans_amt">' + (value.somme_totale/100).toFixed(2) + '\n ' +
-                    //'<br/><button class="col button button-small button-fill color-blue void-action-button" id="void_transacation_btn" onclick="void_transaction(\'' + value.id_commande_format_client  + '\',\'' + value.somme_totale  + '\')">VOID</button>' +
+                    '<br/><button class="col button button-small button-fill color-blue void-action-button" id="void_transacation_btn" onclick="void_transaction(\'' + value.id_commande_format_client  + '\',\'' + value.somme_totale  + '\')">VOID</button>' +
                     '</td>\n' +
                     '<td class="rp-item-after trans_status"><span class="' + status_class + '">'+p_status + '</span>';
                     if(value.last_app_used != '' && typeof value.last_app_used !='undefined' && value.last_app_used != 'Null' &&
@@ -407,6 +423,146 @@ function yesterday(){
     $('#yesterday').val(1);
     getTransactions(1); //1 = yes yesterday
 }
+
+/*PWC*/
+function doVoid(){ //for D20
+    console.log("doVoid");
+
+    cordova.plugins.dspread_pos_plugin.doTrade(function(message){
+        console.log("do void success: " +message);
+        //posresult("do trade: " +message);
+        if(message === "onRequestSetAmount"){
+            setAmount();
+        }
+        else if(message === 'onRequestWaitingUser'){
+            //app.toast.show({text:'Enter or Tap card',position:'bottom',closeTimeout: 5000});
+            document.getElementById('audio-enter-card').play();
+        }
+        else if(message.startsWith("onRequestOnlineProcess: ")){
+            var onlineData = message.replace("onRequestOnlineProcess: ", "");
+            console.log(onlineData);
+            ///processPayment(onlineData,'chip');
+            voidPayment(onlineData,'chip');
+            /*var tagDict = parseTLV(onlineData);
+            for(var key in tagDict){
+              console.log("tag: " + key + " value: " + tagDict[key]);
+            }*/
+        }
+        else if(message.startsWith("NFCbatchData: ")){
+            var onlineData = message.replace("NFCbatchData: ", "");
+            console.log(onlineData);
+            app.dialog.alert('Tchin & PIN Only', 'default');
+            //processPayment(onlineData,'nfc');
+        }
+        else if(message == "onQposRequestPinResult"){
+            pin_counter++;
+            miniNumberKeyboard();
+            if(pin_counter > 1)
+            {
+                app.dialog.close();
+                //app.dialog.alert('Incorrect PIN');
+                app.toast.show({text:'Incorrect pin',position:'top',closeTimeout: 3000});
+            }
+            var position = getPosition();
+            console.log("position:"+position);
+            cordova.plugins.dspread_pos_plugin.sendPosition(function(message){
+                console.log("success: " +message);
+            },function(message){
+                console.log("fail: " +message);
+            },[position]);
+        }
+        else if(message.startsWith("Num:")){
+            var num = message.slice(4);
+            pinInput(num);
+            if(num == -1)
+            {
+                app.dialog.preloader('Processing', 'default');
+            }
+        }
+    },function(message){
+        console.log("do void fail: " +message);
+        //posresult(message);
+        if(message === 'onError:CMD TIMEOUT')
+        {
+            app.dialog.alert('Operation timeout','Error',function (){
+                resetForm();
+            });
+        }
+        else if(message === 'CANCEL')
+        {
+            app.dialog.close();
+            resetForm();
+        }
+        else
+        {
+            if(message != 'DECLINED')
+            {
+                app.dialog.alert('An error has occurred','Error',function (){
+                    resetForm();
+                });
+            }
+        }
+    },['120']);
+}
+
+function voidPayment(datatlv,friction_type){
+    //app.dialog.preloader('Processing', 'default');
+    document.getElementById('audio-approval-card').play();
+
+    var formData = new FormData();
+    formData.append('ref', 'void_app_payment');
+    formData.append('amount', $('#payment_amount').val());
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', $('#o').val());
+    formData.append('op_id', $('#op_id').val());
+    formData.append('r_pwd', $('#r_pwd').val());
+    formData.append('creator_id', $('#creator_id').val());
+    formData.append('creator_email', $('#creator_email').val());
+    formData.append('device_id', $('#device_id').val());
+    formData.append('remarks', $('#remarks').val());
+    formData.append('connected_user_name', $('#connected_user_name').val());
+    //formData.append('currency', $('input[name="radio-currency"]:checked').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('tlv_data', datatlv);
+    formData.append('friction_type', friction_type);
+    app.request({
+        crossDomain: true,
+        method: 'POST',
+        url: mymipsURL+'mips-app/mips-app.php',
+        data: formData,
+        dataType: 'json',
+        success: function(data) {
+            console.log(data);
+            app.dialog.close();
+            if(data.result === 'success')
+            {
+                window.dialogPaymentSuccess = app.dialog.create({
+                    content: '<div class="block no-hairlines no-margin-top margin-bottom-half no-padding"><div class="text-align-center"><div class="payment-success-icon"><i class="f7-icons">checkmark_alt_circle</i></div><div class="payment-success-text">Void Success</div></div></div><div class="block no-hairlines no-margin no-padding"><div class="text-align-center margin-bottom-half">Select receipt options:</div><div class="row"><div class="col"><button class="button button-fill button-raised" id="btn-receipt-sms" onclick="getPhoneNum();">SMS</button></div><div class="col"><button class="button button-fill button-raised" id="btn-receipt-email" onclick="getEmailAdd();">Email</button></div></div></div>',
+                    buttons: [
+                        {
+                            text: 'Back', onClick: function () {
+                                console.log('close dialog');
+                                window.dialogPaymentSuccess.close();
+                                resetForm();
+                            }
+                        }
+                    ],
+                    destroyOnClose: true
+                }).open();
+            }
+
+        },
+        error: function(err){
+            console.log(err);
+            app.dialog.close();
+            $('#transSummary').html('<tr><td>ERROR</td></tr>');
+        }
+    });
+}
 /***********************/
 /* Transaction end     */
 /***********************/
@@ -418,17 +574,7 @@ $$(document).on('page:init', '.page[data-page="transactions"]', function (e) {
     //getTransactions();
 })
 */
-$$(document).on('page:init', '.page[data-name="transactions"]', function (e) {
-    // Do something here when page with data-page="about" attribute loaded and initialized
-    console.log('PAGE TRANSACTIONS LOADED, LOADING TRANSACTIONS  - ' + $('#statusTransactionFilter').val()); //option:selected
-    if($('#is_printer_on').val() == 1)
-    {
-        loadPrinters();
-        $('.printTransactionBtn-action-button').removeClass('not-activated');
-        $('.btpPrinter-block').removeClass('not-activated');
-    }
-    getTransactions();
-})
+
 
 /*
   * TILL INTEGRATION ?
@@ -461,7 +607,6 @@ function checknewtransaction(event){
         crossDomain: true,
         method: 'POST',
         url: mymipsURL+'mips-app/get-till-transaction.php',
-        //url: 'https://my.mips.mu/mips-app/get-till-transaction.php',
         data: formData,
         dataType: 'json',
         success: function(data) {
@@ -475,12 +620,26 @@ function checknewtransaction(event){
                     $('#qr_check_order').val(order.id_commande_format_client);
                     //$('#remarks').val('Till Ref Id: ' + order.id_commande_format_client);
                     document.getElementById('audio-amount-ready').play();
+                    //check_if_new_transaction_cancelled(order.id_commande_format_client);
+                }
+                else{
+                    console.log('Empty');
+                    $('#o').val('');
+                    $('#amount_to_pay').val('0.00');
+                    $('#qr_check_order').val('');
+                    $('#qr_check_amount').val('');
                 }
             }
             else{
-                setTimeout(function () { checknewtransaction(); } ,5000);
+                console.log('no data ?');
+                $('#o').val('');
+                //$('#amount_to_pay').val();
+                $('#amount_to_pay').val('0.00');
+                $('#qr_check_order').val();
+                $('#qr_check_amount').val('');
+                resetForm();
             }
-
+            setTimeout(function () { checknewtransaction(); } ,5000);
         },
         error: function (data, errorThrown){
             // app.dialog.close();
@@ -494,3 +653,65 @@ function checknewtransaction(event){
     });
     //setTimeout(function () { checknewtransaction(); } ,3000);
 }
+
+function check_if_new_transaction_cancelled(order_id_commande_format_client){
+    /*console.log('check_if_new_transaction_cancelled  ' + order_id_commande_format_client);
+
+    if(order_id_commande_format_client != ''){
+        console.log('calling api');
+    }
+
+    //temporaire
+    //$('#is_till_integration').val(1); // to revisit
+    var id_merchant = $('#m').val();
+    var id_form = $('#f').val();
+    var id_user = $('#creator_id').val();
+
+
+    var formData = new FormData();
+
+    // formData.append('id_order', id_order);
+    formData.append('m', id_merchant);
+    formData.append('f', id_form);
+    formData.append('creator_id', id_user);
+    formData.append('for_till_id', $('#device_id').val());
+    formData.append('o', order_id_commande_format_client);
+    formData.append('connected_user_name', $('#connected_user_name').val());
+    formData.append('is_till_integration',$('#is_till_integration').val());
+    formData.append('ref', 'get_payment_information');
+    console.log(order_id_commande_format_client);
+    app.request({
+        crossDomain: true,
+        method: 'POST',
+        url: mymipsURL + 'mips-app/get-till-transaction.php',
+        data: formData,
+        dataType: 'json',
+        success: function (data) {
+            console.log(data);
+
+            if(data.status == 'CANCELLED'){
+                $('#o').val('');
+                $('#amount_to_pay').val();
+                //resetForm();
+                checknewtransaction();
+            }
+            else{
+                setTimeout(function () { check_if_new_transaction_cancelled(order_id_commande_format_client); } ,5000);
+            }
+        }
+
+    });*/
+
+}
+
+$$(document).on('page:init', '.page[data-name="transactions"]', function (e) {
+    // Do something here when page with data-page="about" attribute loaded and initialized
+    console.log('PAGE TRANSACTIONS LOADED, LOADING TRANSACTIONS  - ' + $('#statusTransactionFilter').val()); //option:selected
+    if($('#is_printer_on').val() == 1)
+    {
+        loadPrinters();
+        $('.printTransactionBtn-action-button').removeClass('not-activated');
+        $('.btpPrinter-block').removeClass('not-activated');
+    }
+    getTransactions();
+})

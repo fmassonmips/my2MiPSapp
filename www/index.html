@@ -127,6 +127,13 @@
                   </a>
                 </li>
                 <li>
+                  <a href="/support/" class="item-content item-link mips-support-menu-link" onclick="app.panel.close();">
+                    <div class="item-inner">
+                      <div class="item-title">Support</div>
+                    </div>
+                  </a>
+                </li>
+                <li>
                   <a href="#" class="item-content item-link" id="logout-link">
                     <div class="item-inner">
                       <div class="item-title">Log out</div>
@@ -252,6 +259,7 @@
               <div class="card-help-block">
                 <div class="progressbar-infinite color-multi"></div>
                 <img id="img-enter-card" src="assets/enter-card.png" alt="Enter Card">
+                <img id="img-enter-card-only" src="assets/enter-card-only.png" alt="Enter Card">
                 <img id="img-tap-phone" src="assets/tchin-phone.png" alt="Tchin Phone">
                 <img id="img-success-msg" src="assets/text-success.png" alt="Success">
                 <img id="img-tchin-fidelity" src="assets/tchin-card.png" alt="Tchin Card">
@@ -288,6 +296,22 @@
                       </span>
                     </span>
                 <span><i class="f7-icons">creditcard</i> CARD</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="block no-hairlines no-margin-top no-margin-bottom block-sof-refund">
+          <div class="row justify-content-center">
+            <div class="col-100 xsmall-75 small-60 medium-40">
+              <button class="button button-large button-fill button-raised button-preloader m-action-button margin-bottom-half" id="refund_amount">
+                    <span class="preloader">
+                      <span class="preloader-inner">
+                        <svg viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="16"></circle>
+                        </svg>
+                      </span>
+                    </span>
+                <span><i class="f7-icons">creditcard</i> REFUND</span>
               </button>
             </div>
           </div>
@@ -1263,6 +1287,8 @@
 <script src="js/remote-payment.js"></script>
 <!-- App Transactions scripts -->
 <script src="js/transactions.js"></script>
+<!-- App Support scripts -->
+<script src="js/support.js"></script>
 
 <script src="js/bluetoothle.js"></script>
 
@@ -1803,12 +1829,31 @@
       $('.m-action-button').attr('disabled', true);
       $(this).addClass('button-loading');
       $('.card-help-block #img-enter-card').show();
+      $('.card-help-block #img-enter-card-only').hide();
       $('.card-help-block').show();
       $('.m-action-button').hide();
       $('.tchin-block-border').hide();
       $('.idp-block').hide();
       $('.remarks-list').hide();
       dotrade();
+    }
+  });
+
+  $('#refund_amount').on('click', function (e){
+    e.preventDefault();
+    $(this).focus();
+    if(checkAmount()) {
+      $('.m-action-button').attr('disabled', true);
+      $(this).addClass('button-loading');
+      $('.card-help-block #img-enter-card').hide();
+      $('.card-help-block #img-enter-card-only').show();
+      $('.card-help-block').show();
+      $('.m-action-button').hide();
+      $('.tchin-block-border').hide();
+      $('.idp-block').hide();
+      $('.remarks-list').hide();
+      //dotrade();
+      doRefund();
     }
   });
 
@@ -1862,6 +1907,7 @@
         {
           document.getElementById('audio-payment-success').play();
           $('.card-help-block #img-enter-card').hide();
+          $('.card-help-block #img-enter-card-only').hide();
           $('.card-help-block #img-success-msg').show();
 
           window.dialogPaymentSuccess = app.dialog.create({
@@ -2345,6 +2391,7 @@
     $('#payment_amount').val('');
     $('#ticket_short_desc').val('');
     $('#ticket_email').val('');
+    $('#o').val('');
     AmountKeypad.setValue('');
     IdpPhoneKeypad.setValue('');
     UserPinKeypad.setValue('');
@@ -3801,6 +3848,146 @@
     }
   }
 
+  function doRefund(){ //for D20
+    console.log("doRefund");
+    cordova.plugins.dspread_pos_plugin.doTrade(function(message){
+      console.log("do refund success: " +message);
+      //posresult("do trade: " +message);
+      if(message === "onRequestSetAmount"){
+        setAmount();
+      }
+      else if(message === 'onRequestWaitingUser'){
+        //app.toast.show({text:'Enter or Tap card',position:'bottom',closeTimeout: 5000});
+        document.getElementById('audio-enter-card').play();
+      }
+      else if(message.startsWith("onRequestOnlineProcess: ")){
+        var onlineData = message.replace("onRequestOnlineProcess: ", "");
+        console.log(onlineData);
+        //processPayment(onlineData,'chip');
+        refundPayment(onlineData,'chip');
+        /*var tagDict = parseTLV(onlineData);
+        for(var key in tagDict){
+          console.log("tag: " + key + " value: " + tagDict[key]);
+        }*/
+      }
+      else if(message.startsWith("NFCbatchData: ")){
+        var onlineData = message.replace("NFCbatchData: ", "");
+        console.log(onlineData);
+        //app.dialog.preloader('Processing', 'default');
+        //processPayment(onlineData,'nfc');
+      }
+      else if(message == "onQposRequestPinResult"){
+        pin_counter++;
+        miniNumberKeyboard();
+        if(pin_counter > 1)
+        {
+          app.dialog.close();
+          //app.dialog.alert('Incorrect PIN');
+          app.toast.show({text:'Incorrect pin',position:'top',closeTimeout: 3000});
+        }
+        var position = getPosition();
+        console.log("position:"+position);
+        cordova.plugins.dspread_pos_plugin.sendPosition(function(message){
+          console.log("success: " +message);
+        },function(message){
+          console.log("fail: " +message);
+        },[position]);
+      }
+      else if(message.startsWith("Num:")){
+        var num = message.slice(4);
+        pinInput(num);
+        if(num == -1)
+        {
+          app.dialog.preloader('Processing', 'default');
+        }
+      }
+    },function(message){
+      console.log("do trade fail: " +message);
+      //posresult(message);
+      if(message === 'onError:CMD TIMEOUT')
+      {
+        app.dialog.alert('Operation timeout','Error',function (){
+          resetForm();
+        });
+      }
+      else if(message === 'CANCEL')
+      {
+        app.dialog.close();
+        resetForm();
+      }
+      else
+      {
+        if(message != 'DECLINED')
+        {
+          app.dialog.alert('An error has occurred','Error',function (){
+            resetForm();
+          });
+        }
+      }
+    },['120']);
+  }
+
+  function refundPayment(datatlv,friction_type){
+    //app.dialog.preloader('Processing', 'default');
+    document.getElementById('audio-approval-card').play();
+
+    var formData = new FormData();
+    formData.append('ref', 'refund_app_payment');
+    formData.append('amount', $('#payment_amount').val());
+    formData.append('m', $('#m').val());
+    formData.append('s', $('#s').val());
+    formData.append('c', $('#c').val());
+    formData.append('f', $('#f').val());
+    formData.append('o', $('#o').val());
+    formData.append('op_id', $('#op_id').val());
+    formData.append('r_pwd', $('#r_pwd').val());
+    formData.append('creator_id', $('#creator_id').val());
+    formData.append('creator_email', $('#creator_email').val());
+    formData.append('device_id', $('#device_id').val());
+    formData.append('remarks', $('#remarks').val());
+    formData.append('connected_user_name', $('#connected_user_name').val());
+    //formData.append('currency', $('input[name="radio-currency"]:checked').val());
+    //formData.append('currency', $('#currency').val());
+    formData.append('currency', $('#smart-select-currency').val());
+    formData.append('tlv_data', datatlv);
+    formData.append('friction_type', friction_type);
+    app.request({
+      crossDomain: true,
+      method: 'POST',
+      url: mymipsURL+'mips-app/mips-app.php',
+      data: formData,
+      dataType: 'json',
+      success: function(data) {
+        console.log(data);
+        app.dialog.close();
+        if(data.result === 'success')
+        {
+          window.dialogPaymentSuccess = app.dialog.create({
+            content: '<div class="block no-hairlines no-margin-top margin-bottom-half no-padding"><div class="text-align-center"><div class="payment-success-icon"><i class="f7-icons">checkmark_alt_circle</i></div><div class="payment-success-text">Refund Success</div></div></div><div class="block no-hairlines no-margin no-padding"><div class="text-align-center margin-bottom-half">Select receipt options:</div><div class="row"><div class="col"><button class="button button-fill button-raised" id="btn-receipt-sms" onclick="getPhoneNum();">SMS</button></div><div class="col"><button class="button button-fill button-raised" id="btn-receipt-email" onclick="getEmailAdd();">Email</button></div></div></div>',
+            buttons: [
+              {
+                text: 'Back', onClick: function () {
+                  console.log('close dialog');
+                  window.dialogPaymentSuccess.close();
+                  resetForm();
+                }
+              }
+            ],
+            destroyOnClose: true
+          }).open();
+        }
+
+      },
+      error: function(err){
+        console.log(err);
+        app.dialog.close();
+        $('#transSummary').html('<tr><td>ERROR</td></tr>');
+      }
+    });
+  }
+
+
+
   /******************************/
   /* Transactions        */
   /* Remote Payments     */
@@ -3816,7 +4003,7 @@
   $('#mips-payment-link').on('click', function (e) {
     app.panel.close();
   });
-  $('.version').html('1.0.7'); //app.version
+  $('.version').html('1.0.8'); //app.version
 
   $('#remarks').on("keydown", function(event) {
     console.log(event.keyCode);
